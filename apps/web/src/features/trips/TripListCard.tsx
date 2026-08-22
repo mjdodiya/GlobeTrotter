@@ -1,4 +1,5 @@
 import { CalendarDays, MapPin } from "lucide-react"
+import { Link } from "@tanstack/react-router"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,7 +24,7 @@ export function TripListCard({ trip }: { trip: UserTrip }) {
         </div>
         <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
           <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${statusStyles[trip.status]}`}>{trip.status}</span>
-          <Button type="button" variant="outline" className="h-9 rounded-lg border-[#b9d8df] px-4 text-[11px] font-semibold text-[#0d7a8a] hover:bg-[#f1f8f8]">View</Button>
+          <Button asChild type="button" variant="outline" className="h-9 rounded-lg border-[#b9d8df] px-4 text-[11px] font-semibold text-[#0d7a8a] hover:bg-[#f1f8f8]"><Link to="/trips/$tripId" params={{ tripId: trip.id }}>View</Link></Button>
         </div>
       </CardContent>
     </Card>

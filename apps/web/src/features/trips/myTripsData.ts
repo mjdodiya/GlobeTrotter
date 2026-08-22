@@ -3,12 +3,14 @@ import type { PreviousTrip } from "@/features/home/homeData"
 export type TripStatus = "Ongoing" | "Upcoming" | "Completed"
 
 export type UserTrip = Omit<PreviousTrip, "status"> & {
+  id: string
   status: TripStatus
   duration: string
 }
 
 export const userTrips: UserTrip[] = [
   {
+    id: "barcelona-summer-escape",
     title: "Barcelona Summer Escape",
     location: "Barcelona, Spain",
     date: "Aug 18–25, 2024",
@@ -17,6 +19,7 @@ export const userTrips: UserTrip[] = [
     status: "Ongoing",
   },
   {
+    id: "tokyo-autumn-adventure",
     title: "Tokyo Autumn Adventure",
     location: "Tokyo, Japan",
     date: "Oct 5–14, 2024",
@@ -25,6 +28,7 @@ export const userTrips: UserTrip[] = [
     status: "Upcoming",
   },
   {
+    id: "paris-romantic-getaway",
     title: "Paris Romantic Getaway",
     location: "Paris, France",
     date: "Jan 4–9, 2024",
@@ -33,6 +37,7 @@ export const userTrips: UserTrip[] = [
     status: "Completed",
   },
   {
+    id: "nyc-weekend-break",
     title: "NYC Weekend Break",
     location: "New York, USA",
     date: "Nov 15–22, 2023",
@@ -41,6 +46,7 @@ export const userTrips: UserTrip[] = [
     status: "Completed",
   },
   {
+    id: "bali-wellness-retreat",
     title: "Bali Wellness Retreat",
     location: "Bali, Indonesia",
     date: "Sep 3–12, 2023",

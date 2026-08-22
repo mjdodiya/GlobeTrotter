@@ -9,12 +9,12 @@ import { HeroBanner, HeroSearch } from "./HeroBanner"
 import { HomeNavbar } from "./HomeNavbar"
 import { TripCard } from "./TripCard"
 
-function SectionHeading({ title, action }: { title: string; action: string }) {
+function SectionHeading({ title, action, to }: { title: string; action: string; to?: "/trips" }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
           <h2 id={title === "Previous Trips" ? "trips-heading" : "regional-heading"} className="font-heading text-[27px] font-semibold leading-none text-[#173452]">{title}</h2>
-      <Button type="button" variant="ghost" className="h-auto gap-1 px-0 text-xs font-semibold text-[#0d7a8a] hover:bg-transparent hover:text-[#173452]">
-        {action}<ArrowRight className="size-3.5" aria-hidden="true" />
+      <Button asChild type="button" variant="ghost" className="h-auto gap-1 px-0 text-xs font-semibold text-[#0d7a8a] hover:bg-transparent hover:text-[#173452]">
+        {to ? <Link to={to}>{action}<ArrowRight className="size-3.5" aria-hidden="true" /></Link> : <span>{action}<ArrowRight className="size-3.5" aria-hidden="true" /></span>}
       </Button>
     </div>
   )
@@ -36,7 +36,7 @@ export function HomePage() {
         </section>
 
         <section className="mt-10" aria-labelledby="trips-heading">
-          <SectionHeading title="Previous Trips" action="View all trips" />
+          <SectionHeading title="Previous Trips" action="View all trips" to="/trips" />
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {previousTrips.map((trip) => <TripCard key={trip.title} trip={trip} />)}
           </div>

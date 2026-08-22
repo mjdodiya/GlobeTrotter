@@ -13,6 +13,7 @@ export type Destination = {
 }
 
 export type PreviousTrip = {
+  tripId?: string
   title: string
   location: string
   date: string
@@ -62,6 +63,7 @@ export const destinations: Destination[] = [
 
 export const previousTrips: PreviousTrip[] = [
   {
+    tripId: "japan-adventure",
     title: "Japan Adventure",
     location: "Tokyo · Kyoto · Osaka",
     date: "Mar 18–28, 2024",
@@ -69,6 +71,7 @@ export const previousTrips: PreviousTrip[] = [
     status: "Completed",
   },
   {
+    tripId: "paris-romantic-getaway",
     title: "Paris Getaway",
     location: "Paris, France",
     date: "Jan 4–9, 2024",
@@ -76,6 +79,7 @@ export const previousTrips: PreviousTrip[] = [
     status: "Completed",
   },
   {
+    tripId: "nyc-weekend-break",
     title: "NYC Weekend",
     location: "New York, USA",
     date: "Nov 15–22, 2023",
