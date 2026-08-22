@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+
 import signinImage from "@/assets/images/signinImg.jpg";
 import { SignInForm } from "@/features/auth/signInForm";
 
@@ -24,14 +25,14 @@ function LoginPage() {
           <div className="relative z-10 flex min-h-svh flex-col justify-between p-10 xl:p-12">
             {/* Brand */}
             <div>
-              <span className="font-serif text-2xl font-semibold text-white">
+              <span className="font-heading text-2xl font-semibold text-white">
                 GlobeTrotter
               </span>
             </div>
 
             {/* Main copy */}
             <div className="max-w-md">
-              <h2 className="font-serif text-5xl font-semibold leading-[1.08] tracking-tight text-white xl:text-6xl">
+              <h2 className="font-heading text-5xl font-semibold leading-[1.08] tracking-tight text-white xl:text-6xl">
                 Your world,
                 <br />
                 perfectly planned.

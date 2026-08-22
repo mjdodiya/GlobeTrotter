@@ -1,19 +1,57 @@
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 
 export function SignInForm() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    if (!email.trim() || !password) {
+      setError("Enter your email and password to continue.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+        rememberMe,
+      });
+      if (result.error) {
+        setError(result.error.message || "Those credentials could not be verified.");
+        setIsSubmitting(false);
+        return;
+      }
+    } catch {
+      setError("We could not reach the sign-in service. Try again.");
+      setIsSubmitting(false);
+      return;
+    }
+    setIsSubmitting(false);
+
+    await navigate({ to: "/" });
+  }
 
   return (
     <div className="w-full max-w-[420px]">
       {/* Heading */}
       <div className="mb-9 text-center">
-        <h1 className="font-serif text-[34px] font-semibold leading-tight tracking-tight text-[#0F2744]">
+        <h1 className="font-heading text-[34px] font-semibold leading-tight tracking-tight text-[#0F2744]">
           Welcome back
         </h1>
 
@@ -61,7 +99,7 @@ export function SignInForm() {
       </div>
 
       {/* Form */}
-      <form className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit} noValidate>
         {/* Email */}
         <div className="space-y-2">
           <Label
@@ -75,6 +113,10 @@ export function SignInForm() {
             id="email"
             type="email"
             placeholder="Enter your email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            required
             className="h-11 rounded-lg border-[#D9E1EA] bg-white px-4 text-sm shadow-none placeholder:text-[#9AA9BA] focus-visible:border-[#0D7A8A] focus-visible:ring-[#0D7A8A]/20"
           />
         </div>
@@ -92,6 +134,10 @@ export function SignInForm() {
             id="password"
             type="password"
             placeholder="Enter your password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            required
             className="h-11 rounded-lg border-[#D9E1EA] bg-white px-4 text-sm shadow-none placeholder:text-[#9AA9BA] focus-visible:border-[#0D7A8A] focus-visible:ring-[#0D7A8A]/20"
           />
         </div>
@@ -102,9 +148,9 @@ export function SignInForm() {
             <Checkbox
               id="remember-me"
               checked={rememberMe}
-              onCheckedChange={(checked) =>
-                setRememberMe(checked === true)
-              }
+              onCheckedChange={(checked) => {
+                setRememberMe(checked === true);
+              }}
             />
 
             <Label
@@ -117,29 +163,38 @@ export function SignInForm() {
 
           <button
             type="button"
-            className="text-xs font-semibold text-[#0D7A8A] transition-colors hover:text-[#0F2744]"
+            disabled
+            className="cursor-not-allowed text-xs font-semibold text-[#9AA9BA]"
+            title="Password recovery is not configured yet"
           >
             Forgot password?
           </button>
         </div>
 
+        {error ? (
+          <p role="alert" className="text-sm text-red-700">
+            {error}
+          </p>
+        ) : null}
+
         {/* Sign in */}
         <Button
           type="submit"
+          disabled={isSubmitting}
           className="h-11 w-full rounded-lg bg-[#0F2744] text-sm font-semibold text-white shadow-none transition-colors hover:bg-[#183A61]"
         >
-          Sign In
+          {isSubmitting ? "Signing in..." : "Sign In"}
         </Button>
 
         {/* Signup */}
-        <p className="pt-1 text-center text-sm text-[#526984]">
+        <p className="text-center text-[12px] text-[#526984]">
           New here?{" "}
-          <button
-            type="button"
+          <Link
+            to="/signup"
             className="font-semibold text-[#0D7A8A] transition-colors hover:text-[#0F2744]"
           >
             Create an account
-          </button>
+          </Link>
         </p>
       </form>
     </div>
