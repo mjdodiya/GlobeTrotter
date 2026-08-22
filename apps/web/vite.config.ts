@@ -29,6 +29,7 @@ export default defineConfig({
   plugins: [
     tanstackRouter({
       autoCodeSplitting: true,
+      routeFileIgnorePattern: "\\.test\\.",
       target: "react",
     }),
     react(),
