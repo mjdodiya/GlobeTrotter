@@ -214,6 +214,28 @@ test("Trip planning mutations enforce access, invariants, and optimistic concurr
     baseCurrency: "INR",
   })
 
+  const ownerTripList = await request("GET", "/api/v1/trips", { userId: users.alice.id })
+  assert.equal(ownerTripList.status, 200, await ownerTripList.clone().text())
+  const ownerTripListBody = await jsonData<{
+    data: Array<{
+      access: {
+        canDelete: boolean
+        canEdit: boolean
+        canManageMembers: boolean
+        canManageShareLinks: boolean
+        level: string
+      }
+      id: string
+    }>
+  }>(ownerTripList)
+  assert.deepEqual(ownerTripListBody.data.find((listedTrip) => listedTrip.id === trip.id)?.access, {
+    level: "owner",
+    canEdit: true,
+    canManageMembers: true,
+    canManageShareLinks: true,
+    canDelete: true,
+  })
+
   await expectProblem(
     await request("PATCH", `/api/v1/trips/${trip.id}`, {
       userId: users.alice.id,

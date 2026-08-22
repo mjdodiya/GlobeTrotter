@@ -22,9 +22,11 @@ import { Route as PublicResetPasswordRouteImport } from './routes/_public.reset-
 import { Route as PublicSignInRouteImport } from './routes/_public.sign-in'
 import { Route as PublicSignUpRouteImport } from './routes/_public.sign-up'
 import { Route as PublicVerifyEmailRouteImport } from './routes/_public.verify-email'
+import { Route as AuthenticatedTripsNewRouteImport } from './routes/_authenticated.trips_.new'
 import { Route as PublicActivitiesActivityIdRouteImport } from './routes/_public.activities_.$activityId'
 import { Route as PublicCitiesCityIdRouteImport } from './routes/_public.cities_.$cityId'
 import { Route as PublicTripsTripIdRouteImport } from './routes/_public.trips.$tripId'
+import { Route as AuthenticatedTripsTripIdManageRouteImport } from './routes/_authenticated.trips_.$tripId.manage'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -89,6 +91,11 @@ const PublicVerifyEmailRoute = PublicVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => PublicRoute,
 } as any)
+const AuthenticatedTripsNewRoute = AuthenticatedTripsNewRouteImport.update({
+  id: '/trips_/new',
+  path: '/trips/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const PublicActivitiesActivityIdRoute =
   PublicActivitiesActivityIdRouteImport.update({
     id: '/activities_/$activityId',
@@ -105,6 +112,12 @@ const PublicTripsTripIdRoute = PublicTripsTripIdRouteImport.update({
   path: '/trips/$tripId',
   getParentRoute: () => PublicRoute,
 } as any)
+const AuthenticatedTripsTripIdManageRoute =
+  AuthenticatedTripsTripIdManageRouteImport.update({
+    id: '/trips_/$tripId/manage',
+    path: '/trips/$tripId/manage',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
@@ -118,9 +131,11 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof PublicSignInRoute
   '/sign-up': typeof PublicSignUpRoute
   '/verify-email': typeof PublicVerifyEmailRoute
+  '/trips/new': typeof AuthenticatedTripsNewRoute
   '/activities/$activityId': typeof PublicActivitiesActivityIdRoute
   '/cities/$cityId': typeof PublicCitiesCityIdRoute
   '/trips/$tripId': typeof PublicTripsTripIdRoute
+  '/trips/$tripId/manage': typeof AuthenticatedTripsTripIdManageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -134,9 +149,11 @@ export interface FileRoutesByTo {
   '/sign-in': typeof PublicSignInRoute
   '/sign-up': typeof PublicSignUpRoute
   '/verify-email': typeof PublicVerifyEmailRoute
+  '/trips/new': typeof AuthenticatedTripsNewRoute
   '/activities/$activityId': typeof PublicActivitiesActivityIdRoute
   '/cities/$cityId': typeof PublicCitiesCityIdRoute
   '/trips/$tripId': typeof PublicTripsTripIdRoute
+  '/trips/$tripId/manage': typeof AuthenticatedTripsTripIdManageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -153,9 +170,11 @@ export interface FileRoutesById {
   '/_public/sign-up': typeof PublicSignUpRoute
   '/_public/verify-email': typeof PublicVerifyEmailRoute
   '/_public/': typeof PublicIndexRoute
+  '/_authenticated/trips_/new': typeof AuthenticatedTripsNewRoute
   '/_public/activities_/$activityId': typeof PublicActivitiesActivityIdRoute
   '/_public/cities_/$cityId': typeof PublicCitiesCityIdRoute
   '/_public/trips/$tripId': typeof PublicTripsTripIdRoute
+  '/_authenticated/trips_/$tripId/manage': typeof AuthenticatedTripsTripIdManageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,9 +190,11 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/trips/new'
     | '/activities/$activityId'
     | '/cities/$cityId'
     | '/trips/$tripId'
+    | '/trips/$tripId/manage'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,9 +208,11 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/trips/new'
     | '/activities/$activityId'
     | '/cities/$cityId'
     | '/trips/$tripId'
+    | '/trips/$tripId/manage'
   id:
     | '__root__'
     | '/_authenticated'
@@ -205,9 +228,11 @@ export interface FileRouteTypes {
     | '/_public/sign-up'
     | '/_public/verify-email'
     | '/_public/'
+    | '/_authenticated/trips_/new'
     | '/_public/activities_/$activityId'
     | '/_public/cities_/$cityId'
     | '/_public/trips/$tripId'
+    | '/_authenticated/trips_/$tripId/manage'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -308,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicVerifyEmailRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_authenticated/trips_/new': {
+      id: '/_authenticated/trips_/new'
+      path: '/trips/new'
+      fullPath: '/trips/new'
+      preLoaderRoute: typeof AuthenticatedTripsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_public/activities_/$activityId': {
       id: '/_public/activities_/$activityId'
       path: '/activities/$activityId'
@@ -329,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicTripsTripIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_authenticated/trips_/$tripId/manage': {
+      id: '/_authenticated/trips_/$tripId/manage'
+      path: '/trips/$tripId/manage'
+      fullPath: '/trips/$tripId/manage'
+      preLoaderRoute: typeof AuthenticatedTripsTripIdManageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -336,12 +375,16 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedTripsRoute: typeof AuthenticatedTripsRoute
+  AuthenticatedTripsNewRoute: typeof AuthenticatedTripsNewRoute
+  AuthenticatedTripsTripIdManageRoute: typeof AuthenticatedTripsTripIdManageRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedTripsRoute: AuthenticatedTripsRoute,
+  AuthenticatedTripsNewRoute: AuthenticatedTripsNewRoute,
+  AuthenticatedTripsTripIdManageRoute: AuthenticatedTripsTripIdManageRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -26,6 +26,7 @@ import {
   executeTripMutation,
   loadCopyableTrip,
   loadTripParticipantAccess,
+  tripCapabilities,
 } from "../services/trip-access.ts"
 import { copyTripAggregate } from "../services/trip-copy.ts"
 import {
@@ -141,6 +142,13 @@ export function createTripRoutes(dependencies: ApiDependencies) {
           trip: trips,
           destinationCount: destinationCountExpression,
           estimatedCost: estimatedCostExpression,
+          memberRole: sql<"editor" | "viewer" | null>`(
+            select ${tripMembers.role}
+            from ${tripMembers}
+            where ${tripMembers.tripId} = ${trips.id}
+              and ${tripMembers.userId} = ${userId}
+            limit 1
+          )`,
         })
         .from(trips)
         .where(and(scopePredicate, statusPredicate, cursorPredicate))
@@ -155,20 +163,26 @@ export function createTripRoutes(dependencies: ApiDependencies) {
           : null
 
       return context.json({
-        data: page.map(({ currentDate, destinationCount, estimatedCost, trip }) => ({
-          id: trip.id,
-          name: trip.name,
-          startDate: trip.startDate,
-          endDate: trip.endDate,
-          destinationCount,
-          estimatedCost,
-          budgetLimit: trip.budgetLimit,
-          baseCurrency: trip.baseCurrency,
-          status: tripStatus(trip.startDate, trip.endDate, currentDate),
-          visibility: trip.visibility,
-          version: trip.version,
-          updatedAt: timestamp(trip.updatedAt),
-        })),
+        data: page.map(({ currentDate, destinationCount, estimatedCost, memberRole, trip }) => {
+          const accessLevel = trip.ownerId === userId ? "owner" : memberRole
+          if (!accessLevel) throw new Error("Accessible Trip did not resolve participant access")
+
+          return {
+            id: trip.id,
+            name: trip.name,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            destinationCount,
+            estimatedCost,
+            budgetLimit: trip.budgetLimit,
+            baseCurrency: trip.baseCurrency,
+            status: tripStatus(trip.startDate, trip.endDate, currentDate),
+            visibility: trip.visibility,
+            version: trip.version,
+            updatedAt: timestamp(trip.updatedAt),
+            access: tripCapabilities(accessLevel),
+          }
+        }),
         meta: { nextCursor },
       })
     })
