@@ -28,6 +28,12 @@ services:
     volumes:
       - minio_data:/data
 
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   postgres_data:
   minio_data:

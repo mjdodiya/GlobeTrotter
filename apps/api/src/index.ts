@@ -1,8 +1,9 @@
-import { createAuth } from "@globetrotter/auth"
+import { createAuth, createSmtpEmailDelivery } from "@globetrotter/auth"
 import { closeDatabase, db } from "@globetrotter/db"
 import { serve } from "@hono/node-server"
 import pino from "pino"
 
+import { createFrankfurterExchangeRates } from "./adapters/frankfurter-exchange-rates.ts"
 import { createApp } from "./app.ts"
 import type { AuthBoundary } from "./context.ts"
 import { loadServerEnvironment } from "./env.ts"
@@ -28,6 +29,12 @@ const logger = pino({
 const auth = createAuth({
   baseURL: environment.BETTER_AUTH_URL,
   database: db,
+  email: createSmtpEmailDelivery({
+    from: environment.SMTP_FROM,
+    host: environment.SMTP_HOST,
+    port: environment.SMTP_PORT,
+    secure: environment.SMTP_SECURE,
+  }),
   secret: environment.BETTER_AUTH_SECRET,
   trustedOrigins: [environment.WEB_ORIGIN],
 })
@@ -38,7 +45,12 @@ const authBoundary: AuthBoundary = {
     if (!result) return null
     return {
       session: { id: result.session.id },
-      user: { email: result.user.email, id: result.user.id, name: result.user.name },
+      user: {
+        email: result.user.email,
+        emailVerified: result.user.emailVerified,
+        id: result.user.id,
+        name: result.user.name,
+      },
     }
   },
   handler: (request) => auth.handler(request),
@@ -47,8 +59,10 @@ const authBoundary: AuthBoundary = {
 const app = createApp({
   auth: authBoundary,
   database: db,
+  exchangeRates: createFrankfurterExchangeRates(environment.EXCHANGE_RATE_BASE_URL),
   logger,
   trustedOrigins: new Set([environment.WEB_ORIGIN]),
+  webOrigin: environment.WEB_ORIGIN,
 })
 
 const server = serve({ fetch: app.fetch, port: environment.PORT }, (info) => {
