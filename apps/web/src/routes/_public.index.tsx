@@ -1,7 +1,12 @@
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowRight, CalendarDays, MapPinned, WalletCards } from "lucide-react"
+import { ArrowRight, CalendarDays, MapPinned, Search, WalletCards } from "lucide-react"
 
+import { PublicTripCard } from "@/components/discovery/cards"
+import { InitialResultsState, ResultsFooter, ResultsGrid } from "@/components/discovery/results"
 import { Button } from "@/components/ui/button"
+import { publicTripsQueryOptions } from "@/lib/discovery-api"
+import { uniqueById } from "@/lib/discovery-search"
 
 const features = [
   {
@@ -26,6 +31,9 @@ export const Route = createFileRoute("/_public/")({
 })
 
 function LandingPage() {
+  const tripsQuery = useInfiniteQuery(publicTripsQueryOptions())
+  const trips = uniqueById(tripsQuery.data?.pages ?? [])
+
   return (
     <>
       <section className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:px-8 lg:py-32">
@@ -46,12 +54,17 @@ function LandingPage() {
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg">
-              <Link to="/sign-in">
-                Start planning <ArrowRight aria-hidden="true" />
+              <a href="#public-trips">
+                Explore public Trips <ArrowRight aria-hidden="true" />
+              </a>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/cities">
+                <Search aria-hidden="true" /> Search cities
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <a href="#how-it-works">See how it works</a>
+              <Link to="/activities">Browse activities</Link>
             </Button>
           </div>
         </div>
@@ -63,6 +76,40 @@ function LandingPage() {
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
             </article>
           ))}
+        </div>
+      </section>
+      <section id="public-trips" className="border-t px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <header className="max-w-2xl space-y-2">
+            <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+              Public Trips
+            </p>
+            <h2 className="text-2xl font-semibold sm:text-3xl">See where other plans can lead</h2>
+            <p className="text-muted-foreground">
+              Browse published Trips for route and schedule ideas before shaping your own.
+            </p>
+          </header>
+          <InitialResultsState
+            emptyDescription="Published Trips will appear here as travelers share them."
+            emptyTitle="No public Trips yet"
+            error={tripsQuery.error}
+            isPending={tripsQuery.isPending}
+            itemCount={trips.length}
+            onRetry={() => void tripsQuery.refetch()}
+          />
+          {trips.length ? (
+            <ResultsGrid>
+              {trips.map((trip) => (
+                <PublicTripCard key={trip.id} trip={trip} />
+              ))}
+            </ResultsGrid>
+          ) : null}
+          <ResultsFooter
+            error={trips.length ? tripsQuery.error : null}
+            hasNextPage={Boolean(tripsQuery.hasNextPage)}
+            isFetchingNextPage={tripsQuery.isFetchingNextPage}
+            onLoadMore={() => void tripsQuery.fetchNextPage()}
+          />
         </div>
       </section>
       <section id="how-it-works" className="border-t bg-muted/20 px-4 py-14 sm:px-6 lg:px-8">

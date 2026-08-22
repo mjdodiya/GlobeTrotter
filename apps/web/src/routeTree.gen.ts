@@ -15,7 +15,12 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated.trips'
 import { Route as PublicIndexRouteImport } from './routes/_public.index'
+import { Route as PublicActivitiesRouteImport } from './routes/_public.activities'
+import { Route as PublicCitiesRouteImport } from './routes/_public.cities'
 import { Route as PublicSignInRouteImport } from './routes/_public.sign-in'
+import { Route as PublicActivitiesActivityIdRouteImport } from './routes/_public.activities_.$activityId'
+import { Route as PublicCitiesCityIdRouteImport } from './routes/_public.cities_.$cityId'
+import { Route as PublicTripsTripIdRouteImport } from './routes/_public.trips.$tripId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -45,9 +50,35 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicActivitiesRoute = PublicActivitiesRouteImport.update({
+  id: '/activities',
+  path: '/activities',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicCitiesRoute = PublicCitiesRouteImport.update({
+  id: '/cities',
+  path: '/cities',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicSignInRoute = PublicSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicActivitiesActivityIdRoute =
+  PublicActivitiesActivityIdRouteImport.update({
+    id: '/activities_/$activityId',
+    path: '/activities/$activityId',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicCitiesCityIdRoute = PublicCitiesCityIdRouteImport.update({
+  id: '/cities_/$cityId',
+  path: '/cities/$cityId',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicTripsTripIdRoute = PublicTripsTripIdRouteImport.update({
+  id: '/trips/$tripId',
+  path: '/trips/$tripId',
   getParentRoute: () => PublicRoute,
 } as any)
 
@@ -56,14 +87,24 @@ export interface FileRoutesByFullPath {
   '/account': typeof AuthenticatedAccountRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trips': typeof AuthenticatedTripsRoute
+  '/activities': typeof PublicActivitiesRoute
+  '/cities': typeof PublicCitiesRoute
   '/sign-in': typeof PublicSignInRoute
+  '/activities/$activityId': typeof PublicActivitiesActivityIdRoute
+  '/cities/$cityId': typeof PublicCitiesCityIdRoute
+  '/trips/$tripId': typeof PublicTripsTripIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/account': typeof AuthenticatedAccountRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trips': typeof AuthenticatedTripsRoute
+  '/activities': typeof PublicActivitiesRoute
+  '/cities': typeof PublicCitiesRoute
   '/sign-in': typeof PublicSignInRoute
+  '/activities/$activityId': typeof PublicActivitiesActivityIdRoute
+  '/cities/$cityId': typeof PublicCitiesCityIdRoute
+  '/trips/$tripId': typeof PublicTripsTripIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -72,14 +113,39 @@ export interface FileRoutesById {
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRoute
+  '/_public/activities': typeof PublicActivitiesRoute
+  '/_public/cities': typeof PublicCitiesRoute
   '/_public/sign-in': typeof PublicSignInRoute
   '/_public/': typeof PublicIndexRoute
+  '/_public/activities_/$activityId': typeof PublicActivitiesActivityIdRoute
+  '/_public/cities_/$cityId': typeof PublicCitiesCityIdRoute
+  '/_public/trips/$tripId': typeof PublicTripsTripIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/dashboard' | '/trips' | '/sign-in'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/dashboard'
+    | '/trips'
+    | '/activities'
+    | '/cities'
+    | '/sign-in'
+    | '/activities/$activityId'
+    | '/cities/$cityId'
+    | '/trips/$tripId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/dashboard' | '/trips' | '/sign-in'
+  to:
+    | '/'
+    | '/account'
+    | '/dashboard'
+    | '/trips'
+    | '/activities'
+    | '/cities'
+    | '/sign-in'
+    | '/activities/$activityId'
+    | '/cities/$cityId'
+    | '/trips/$tripId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -87,8 +153,13 @@ export interface FileRouteTypes {
     | '/_authenticated/account'
     | '/_authenticated/dashboard'
     | '/_authenticated/trips'
+    | '/_public/activities'
+    | '/_public/cities'
     | '/_public/sign-in'
     | '/_public/'
+    | '/_public/activities_/$activityId'
+    | '/_public/cities_/$cityId'
+    | '/_public/trips/$tripId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,11 +211,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/activities': {
+      id: '/_public/activities'
+      path: '/activities'
+      fullPath: '/activities'
+      preLoaderRoute: typeof PublicActivitiesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/cities': {
+      id: '/_public/cities'
+      path: '/cities'
+      fullPath: '/cities'
+      preLoaderRoute: typeof PublicCitiesRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/sign-in': {
       id: '/_public/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof PublicSignInRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/activities_/$activityId': {
+      id: '/_public/activities_/$activityId'
+      path: '/activities/$activityId'
+      fullPath: '/activities/$activityId'
+      preLoaderRoute: typeof PublicActivitiesActivityIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/cities_/$cityId': {
+      id: '/_public/cities_/$cityId'
+      path: '/cities/$cityId'
+      fullPath: '/cities/$cityId'
+      preLoaderRoute: typeof PublicCitiesCityIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/trips/$tripId': {
+      id: '/_public/trips/$tripId'
+      path: '/trips/$tripId'
+      fullPath: '/trips/$tripId'
+      preLoaderRoute: typeof PublicTripsTripIdRouteImport
       parentRoute: typeof PublicRoute
     }
   }
@@ -167,13 +273,23 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface PublicRouteChildren {
+  PublicActivitiesRoute: typeof PublicActivitiesRoute
+  PublicCitiesRoute: typeof PublicCitiesRoute
   PublicSignInRoute: typeof PublicSignInRoute
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicActivitiesActivityIdRoute: typeof PublicActivitiesActivityIdRoute
+  PublicCitiesCityIdRoute: typeof PublicCitiesCityIdRoute
+  PublicTripsTripIdRoute: typeof PublicTripsTripIdRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
+  PublicActivitiesRoute: PublicActivitiesRoute,
+  PublicCitiesRoute: PublicCitiesRoute,
   PublicSignInRoute: PublicSignInRoute,
   PublicIndexRoute: PublicIndexRoute,
+  PublicActivitiesActivityIdRoute: PublicActivitiesActivityIdRoute,
+  PublicCitiesCityIdRoute: PublicCitiesCityIdRoute,
+  PublicTripsTripIdRoute: PublicTripsTripIdRoute,
 }
 
 const PublicRouteWithChildren =
