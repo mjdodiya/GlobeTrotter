@@ -6,6 +6,9 @@
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "target": "ES2024",
     "types": ["vite/client"]
   },
