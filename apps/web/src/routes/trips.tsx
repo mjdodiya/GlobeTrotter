@@ -1,7 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-
-import { MyTrips } from '@/features/trips/MyTrips';
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/trips')({
-  component: MyTrips,
-});
+  component: Outlet,
+})

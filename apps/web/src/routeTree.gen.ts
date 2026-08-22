@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -17,12 +18,19 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TripsRouteImport } from './routes/trips'
+import { Route as TripsIndexRouteImport } from './routes/trips.index'
+import { Route as TripsTripIdRouteImport } from './routes/trips.$tripId'
 import { Route as TripsNewRouteImport } from './routes/trips.new'
 import { Route as TripsNewBuildRouteImport } from './routes/trips.new.build'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivitiesRoute = ActivitiesRouteImport.update({
+  id: '/activities',
+  path: '/activities',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -60,6 +68,16 @@ const TripsRoute = TripsRouteImport.update({
   path: '/trips',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TripsIndexRoute = TripsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TripsRoute,
+} as any)
+const TripsTripIdRoute = TripsTripIdRouteImport.update({
+  id: '/$tripId',
+  path: '/$tripId',
+  getParentRoute: () => TripsRoute,
+} as any)
 const TripsNewRoute = TripsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -73,6 +91,7 @@ const TripsNewBuildRoute = TripsNewBuildRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
   '/calendar': typeof CalendarRoute
   '/community': typeof CommunityRoute
@@ -80,24 +99,29 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/signup': typeof SignupRoute
   '/trips': typeof TripsRouteWithChildren
+  '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRouteWithChildren
+  '/trips/': typeof TripsIndexRoute
   '/trips/new/build': typeof TripsNewBuildRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
   '/calendar': typeof CalendarRoute
   '/community': typeof CommunityRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/signup': typeof SignupRoute
-  '/trips': typeof TripsRouteWithChildren
+  '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRouteWithChildren
+  '/trips': typeof TripsIndexRoute
   '/trips/new/build': typeof TripsNewBuildRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
   '/calendar': typeof CalendarRoute
   '/community': typeof CommunityRoute
@@ -105,13 +129,16 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/signup': typeof SignupRoute
   '/trips': typeof TripsRouteWithChildren
+  '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/new': typeof TripsNewRouteWithChildren
+  '/trips/': typeof TripsIndexRoute
   '/trips/new/build': typeof TripsNewBuildRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/activities'
     | '/admin'
     | '/calendar'
     | '/community'
@@ -119,23 +146,28 @@ export interface FileRouteTypes {
     | '/profile'
     | '/signup'
     | '/trips'
+    | '/trips/$tripId'
     | '/trips/new'
+    | '/trips/'
     | '/trips/new/build'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/activities'
     | '/admin'
     | '/calendar'
     | '/community'
     | '/login'
     | '/profile'
     | '/signup'
-    | '/trips'
+    | '/trips/$tripId'
     | '/trips/new'
+    | '/trips'
     | '/trips/new/build'
   id:
     | '__root__'
     | '/'
+    | '/activities'
     | '/admin'
     | '/calendar'
     | '/community'
@@ -143,12 +175,15 @@ export interface FileRouteTypes {
     | '/profile'
     | '/signup'
     | '/trips'
+    | '/trips/$tripId'
     | '/trips/new'
+    | '/trips/'
     | '/trips/new/build'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivitiesRoute: typeof ActivitiesRoute
   AdminRoute: typeof AdminRoute
   CalendarRoute: typeof CalendarRoute
   CommunityRoute: typeof CommunityRoute
@@ -165,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activities': {
+      id: '/activities'
+      path: '/activities'
+      fullPath: '/activities'
+      preLoaderRoute: typeof ActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -216,6 +258,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trips/': {
+      id: '/trips/'
+      path: '/'
+      fullPath: '/trips/'
+      preLoaderRoute: typeof TripsIndexRouteImport
+      parentRoute: typeof TripsRoute
+    }
+    '/trips/$tripId': {
+      id: '/trips/$tripId'
+      path: '/$tripId'
+      fullPath: '/trips/$tripId'
+      preLoaderRoute: typeof TripsTripIdRouteImport
+      parentRoute: typeof TripsRoute
+    }
     '/trips/new': {
       id: '/trips/new'
       path: '/new'
@@ -246,17 +302,22 @@ const TripsNewRouteWithChildren = TripsNewRoute._addFileChildren(
 )
 
 interface TripsRouteChildren {
+  TripsTripIdRoute: typeof TripsTripIdRoute
   TripsNewRoute: typeof TripsNewRouteWithChildren
+  TripsIndexRoute: typeof TripsIndexRoute
 }
 
 const TripsRouteChildren: TripsRouteChildren = {
+  TripsTripIdRoute: TripsTripIdRoute,
   TripsNewRoute: TripsNewRouteWithChildren,
+  TripsIndexRoute: TripsIndexRoute,
 }
 
 const TripsRouteWithChildren = TripsRoute._addFileChildren(TripsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivitiesRoute: ActivitiesRoute,
   AdminRoute: AdminRoute,
   CalendarRoute: CalendarRoute,
   CommunityRoute: CommunityRoute,
