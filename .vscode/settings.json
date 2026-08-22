@@ -1,0 +1,44 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.format.oxc": "always",
+    "source.fixAll.oxc": "always"
+  },
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": false,
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "editor.rulers": [100],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "files.exclude": {
+    "**/.vite": true,
+    "**/coverage": true,
+    "**/dist": true
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.vite/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
+  },
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "js/ts.experimental.useTsgo": true,
+  "npm.enableRunFromFolder": true,
+  "npm.packageManager": "pnpm",
+  "oxc.fixKind": "safe_fix",
+  "search.exclude": {
+    "**/.vite/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true,
+    "apps/web/src/routeTree.gen.ts": true,
+    "packages/db/drizzle/meta/**": true
+  },
+  "typescript.native-preview.tsdk": "./node_modules/@typescript/native",
+  "typescript.updateImportsOnFileMove.enabled": "always"
+}

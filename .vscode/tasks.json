@@ -1,0 +1,126 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev: full stack",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "dev: api",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:api"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "dev: web",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:web"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build"],
+      "problemMatcher": "$tsc",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "typecheck",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["typecheck"],
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "lint",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["lint"],
+      "problemMatcher": []
+    },
+    {
+      "label": "format: check",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["fmt:check"],
+      "problemMatcher": []
+    },
+    {
+      "label": "verify",
+      "dependsOrder": "sequence",
+      "dependsOn": ["format: check", "lint", "typecheck", "build"],
+      "problemMatcher": []
+    },
+    {
+      "label": "db: up",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:up"],
+      "problemMatcher": []
+    },
+    {
+      "label": "db: generate",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:generate"],
+      "problemMatcher": []
+    },
+    {
+      "label": "db: migrate",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:migrate"],
+      "problemMatcher": []
+    },
+    {
+      "label": "db: studio",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:studio"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "db: logs",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:logs"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "db: down",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:down"],
+      "problemMatcher": []
+    }
+  ]
+}

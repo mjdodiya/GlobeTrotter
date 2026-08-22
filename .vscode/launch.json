@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API: debug",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--watch", "--conditions=development", "--env-file=${workspaceFolder}/.env"],
+      "program": "${workspaceFolder}/apps/api/src/index.ts",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/**/node_modules/**"]
+    },
+    {
+      "name": "Web: Vite + browser",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@globetrotter/web", "dev"],
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      },
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/**/node_modules/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full stack: debug",
+      "configurations": ["API: debug", "Web: Vite + browser"],
+      "stopAll": true
+    }
+  ]
+}
