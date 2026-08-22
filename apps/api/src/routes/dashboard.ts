@@ -33,59 +33,58 @@ function dashboardTripSummary(row: {
 }
 
 export function createDashboardRoutes(dependencies: ApiDependencies) {
-  const routes = new Hono<ApiEnvironment>()
-  routes.use("*", requireSession(dependencies))
-
-  routes.get("/", async (context) => {
-    const userId = context.var.session.user.id
-    const accessible = or(
-      eq(trips.ownerId, userId),
-      sql<boolean>`exists (
+  return new Hono<ApiEnvironment>()
+    .use("*", requireSession(dependencies))
+    .get("/", async (context) => {
+      const userId = context.var.session.user.id
+      const accessible = or(
+        eq(trips.ownerId, userId),
+        sql<boolean>`exists (
         select 1 from ${tripMembers}
         where ${tripMembers.tripId} = ${trips.id}
           and ${tripMembers.userId} = ${userId}
       )`,
-    )
+      )
 
-    const summarySelection = {
-      currentDate: currentDateExpression,
-      trip: trips,
-      destinationCount: destinationCountExpression,
-      estimatedCost: estimatedCostExpression,
-    }
+      const summarySelection = {
+        currentDate: currentDateExpression,
+        trip: trips,
+        destinationCount: destinationCountExpression,
+        estimatedCost: estimatedCostExpression,
+      }
 
-    const [upcomingRows, recentRows, popularCities, budgetHighlights] = await Promise.all([
-      dependencies.database
-        .select(summarySelection)
-        .from(trips)
-        .where(and(accessible, gt(trips.startDate, currentDateExpression)))
-        .orderBy(asc(trips.startDate), asc(trips.id))
-        .limit(5),
-      dependencies.database
-        .select(summarySelection)
-        .from(trips)
-        .where(and(accessible, lte(trips.endDate, currentDateExpression)))
-        .orderBy(desc(trips.endDate), desc(trips.id))
-        .limit(5),
-      dependencies.database
-        .select({
-          id: cities.id,
-          name: cities.name,
-          tripCount: sql<number>`count(distinct ${tripStops.tripId})::int`,
-        })
-        .from(tripStops)
-        .innerJoin(trips, eq(trips.id, tripStops.tripId))
-        .innerJoin(cities, eq(cities.id, tripStops.cityId))
-        .where(accessible)
-        .groupBy(cities.id, cities.name)
-        .orderBy(desc(sql`count(distinct ${tripStops.tripId})`), asc(cities.name))
-        .limit(5),
-      dependencies.database
-        .select({
-          currency: trips.baseCurrency,
-          tripCount: sql<number>`count(*)::int`,
-          totalBudget: sql<string>`coalesce(sum("trips"."budget_limit"), 0)::numeric(18, 4)`,
-          totalEstimatedCost: sql<string>`coalesce(sum((
+      const [upcomingRows, recentRows, popularCities, budgetHighlights] = await Promise.all([
+        dependencies.database
+          .select(summarySelection)
+          .from(trips)
+          .where(and(accessible, gt(trips.startDate, currentDateExpression)))
+          .orderBy(asc(trips.startDate), asc(trips.id))
+          .limit(5),
+        dependencies.database
+          .select(summarySelection)
+          .from(trips)
+          .where(and(accessible, lte(trips.endDate, currentDateExpression)))
+          .orderBy(desc(trips.endDate), desc(trips.id))
+          .limit(5),
+        dependencies.database
+          .select({
+            id: cities.id,
+            name: cities.name,
+            tripCount: sql<number>`count(distinct ${tripStops.tripId})::int`,
+          })
+          .from(tripStops)
+          .innerJoin(trips, eq(trips.id, tripStops.tripId))
+          .innerJoin(cities, eq(cities.id, tripStops.cityId))
+          .where(accessible)
+          .groupBy(cities.id, cities.name)
+          .orderBy(desc(sql`count(distinct ${tripStops.tripId})`), asc(cities.name))
+          .limit(5),
+        dependencies.database
+          .select({
+            currency: trips.baseCurrency,
+            tripCount: sql<number>`count(*)::int`,
+            totalBudget: sql<string>`coalesce(sum("trips"."budget_limit"), 0)::numeric(18, 4)`,
+            totalEstimatedCost: sql<string>`coalesce(sum((
             select coalesce(sum(dashboard_items."estimated_cost"), 0)
             from "itinerary_items" dashboard_items
             inner join "trip_stops" dashboard_stops
@@ -96,26 +95,24 @@ export function createDashboardRoutes(dependencies: ApiDependencies) {
             from "trip_legs" dashboard_legs
             where dashboard_legs."trip_id" = "trips"."id"
           )), 0)::numeric(18, 4)`,
-        })
-        .from(trips)
-        .where(accessible)
-        .groupBy(trips.baseCurrency)
-        .orderBy(asc(trips.baseCurrency)),
-    ])
+          })
+          .from(trips)
+          .where(accessible)
+          .groupBy(trips.baseCurrency)
+          .orderBy(asc(trips.baseCurrency)),
+      ])
 
-    return context.json({
-      data: {
-        upcomingTrips: upcomingRows.map(dashboardTripSummary),
-        recentTrips: recentRows.map(dashboardTripSummary),
-        popularCities: popularCities.map((city) => ({
-          id: bigintId(city.id),
-          name: city.name,
-          tripCount: city.tripCount,
-        })),
-        budgetHighlights: { currencies: budgetHighlights },
-      },
+      return context.json({
+        data: {
+          upcomingTrips: upcomingRows.map(dashboardTripSummary),
+          recentTrips: recentRows.map(dashboardTripSummary),
+          popularCities: popularCities.map((city) => ({
+            id: bigintId(city.id),
+            name: city.name,
+            tripCount: city.tripCount,
+          })),
+          budgetHighlights: { currencies: budgetHighlights },
+        },
+      })
     })
-  })
-
-  return routes
 }

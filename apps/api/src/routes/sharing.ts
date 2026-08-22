@@ -76,162 +76,156 @@ async function loadLinkSharedTrip(
 }
 
 export function createShareLinkRoutes(dependencies: ApiDependencies) {
-  const routes = new Hono<ApiEnvironment>()
+  return new Hono<ApiEnvironment>()
+    .get("/:tripId/share-links", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const access = await loadTripParticipantAccess(
+        dependencies.database,
+        tripId,
+        context.var.session.user.id,
+      )
+      requireTripOwner(access)
 
-  routes.get("/:tripId/share-links", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const access = await loadTripParticipantAccess(
-      dependencies.database,
-      tripId,
-      context.var.session.user.id,
-    )
-    requireTripOwner(access)
+      const links = await dependencies.database
+        .select({
+          id: tripShareLinks.id,
+          createdAt: tripShareLinks.createdAt,
+          expiresAt: tripShareLinks.expiresAt,
+          revokedAt: tripShareLinks.revokedAt,
+        })
+        .from(tripShareLinks)
+        .where(eq(tripShareLinks.tripId, tripId))
+        .orderBy(asc(tripShareLinks.createdAt), asc(tripShareLinks.id))
 
-    const links = await dependencies.database
-      .select({
-        id: tripShareLinks.id,
-        createdAt: tripShareLinks.createdAt,
-        expiresAt: tripShareLinks.expiresAt,
-        revokedAt: tripShareLinks.revokedAt,
+      setTripEtag(context, access.trip.version)
+      return context.json({
+        data: links.map((link) => ({
+          id: link.id,
+          createdAt: timestamp(link.createdAt),
+          expiresAt: timestamp(link.expiresAt),
+          revokedAt: timestamp(link.revokedAt),
+        })),
       })
-      .from(tripShareLinks)
-      .where(eq(tripShareLinks.tripId, tripId))
-      .orderBy(asc(tripShareLinks.createdAt), asc(tripShareLinks.id))
-
-    setTripEtag(context, access.trip.version)
-    return context.json({
-      data: links.map((link) => ({
-        id: link.id,
-        createdAt: timestamp(link.createdAt),
-        expiresAt: timestamp(link.expiresAt),
-        revokedAt: timestamp(link.revokedAt),
-      })),
     })
-  })
 
-  routes.post("/:tripId/share-links", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const expectedVersion = requireExpectedVersion(context)
-    const input = await parseJson(context, createShareLinkSchema)
-    const expiresAt = input.expiresAt ? new Date(input.expiresAt) : null
-    if (expiresAt && expiresAt <= new Date()) {
-      throw new DomainError("VALIDATION_ERROR", "expiresAt must be in the future.", {
-        errors: { expiresAt: ["Must be in the future."] },
-      })
-    }
+    .post("/:tripId/share-links", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const expectedVersion = requireExpectedVersion(context)
+      const input = await parseJson(context, createShareLinkSchema)
+      const expiresAt = input.expiresAt ? new Date(input.expiresAt) : null
+      if (expiresAt && expiresAt <= new Date()) {
+        throw new DomainError("VALIDATION_ERROR", "expiresAt must be in the future.", {
+          errors: { expiresAt: ["Must be in the future."] },
+        })
+      }
 
-    const token = randomBytes(32).toString("base64url")
-    const tokenHash = hashShareToken(token)
-    const result = await executeTripMutation(
-      {
-        database: dependencies.database,
-        expectedVersion,
-        requirement: "ownership",
-        tripId,
-        userId: context.var.session.user.id,
-      },
-      async ({ transaction }) => {
-        const [link] = await transaction
-          .insert(tripShareLinks)
-          .values({
-            tripId,
-            createdBy: context.var.session.user.id,
-            tokenHash,
-            expiresAt,
-          })
-          .returning({
-            id: tripShareLinks.id,
-            expiresAt: tripShareLinks.expiresAt,
-          })
-        if (!link) throw new Error("Share link insert did not return a row")
-        return link
-      },
-    )
-
-    const url = new URL(`/share/${token}`, dependencies.webOrigin).toString()
-    setTripEtag(context, result.version)
-    context.header("Cache-Control", "no-store")
-    return context.json(
-      {
-        data: {
-          id: result.data.id,
-          url,
-          expiresAt: timestamp(result.data.expiresAt),
-          version: result.version,
+      const token = randomBytes(32).toString("base64url")
+      const tokenHash = hashShareToken(token)
+      const result = await executeTripMutation(
+        {
+          database: dependencies.database,
+          expectedVersion,
+          requirement: "ownership",
+          tripId,
+          userId: context.var.session.user.id,
         },
-      },
-      201,
-    )
-  })
+        async ({ transaction }) => {
+          const [link] = await transaction
+            .insert(tripShareLinks)
+            .values({
+              tripId,
+              createdBy: context.var.session.user.id,
+              tokenHash,
+              expiresAt,
+            })
+            .returning({
+              id: tripShareLinks.id,
+              expiresAt: tripShareLinks.expiresAt,
+            })
+          if (!link) throw new Error("Share link insert did not return a row")
+          return link
+        },
+      )
 
-  routes.delete("/:tripId/share-links/:shareLinkId", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const shareLinkId = parseValue(uuidSchema, context.req.param("shareLinkId"))
-    const expectedVersion = requireExpectedVersion(context)
+      const url = new URL(`/share/${token}`, dependencies.webOrigin).toString()
+      setTripEtag(context, result.version)
+      context.header("Cache-Control", "no-store")
+      return context.json(
+        {
+          data: {
+            id: result.data.id,
+            url,
+            expiresAt: timestamp(result.data.expiresAt),
+            version: result.version,
+          },
+        },
+        201,
+      )
+    })
 
-    const result = await executeTripMutation(
-      {
-        database: dependencies.database,
-        expectedVersion,
-        requirement: "ownership",
-        tripId,
-        userId: context.var.session.user.id,
-      },
-      async ({ transaction }) => {
-        const [link] = await transaction
-          .select({ id: tripShareLinks.id, revokedAt: tripShareLinks.revokedAt })
-          .from(tripShareLinks)
-          .where(and(eq(tripShareLinks.id, shareLinkId), eq(tripShareLinks.tripId, tripId)))
-          .limit(1)
-        if (!link) {
-          throw new DomainError("SHARE_LINK_NOT_FOUND", "The share link was not found.")
-        }
+    .delete("/:tripId/share-links/:shareLinkId", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const shareLinkId = parseValue(uuidSchema, context.req.param("shareLinkId"))
+      const expectedVersion = requireExpectedVersion(context)
 
-        if (!link.revokedAt) {
-          await transaction
-            .update(tripShareLinks)
-            .set({ revokedAt: new Date() })
+      const result = await executeTripMutation(
+        {
+          database: dependencies.database,
+          expectedVersion,
+          requirement: "ownership",
+          tripId,
+          userId: context.var.session.user.id,
+        },
+        async ({ transaction }) => {
+          const [link] = await transaction
+            .select({ id: tripShareLinks.id, revokedAt: tripShareLinks.revokedAt })
+            .from(tripShareLinks)
             .where(and(eq(tripShareLinks.id, shareLinkId), eq(tripShareLinks.tripId, tripId)))
-        }
-      },
-    )
+            .limit(1)
+          if (!link) {
+            throw new DomainError("SHARE_LINK_NOT_FOUND", "The share link was not found.")
+          }
 
-    setTripEtag(context, result.version)
-    return context.body(null, 204)
-  })
+          if (!link.revokedAt) {
+            await transaction
+              .update(tripShareLinks)
+              .set({ revokedAt: new Date() })
+              .where(and(eq(tripShareLinks.id, shareLinkId), eq(tripShareLinks.tripId, tripId)))
+          }
+        },
+      )
 
-  return routes
+      setTripEtag(context, result.version)
+      return context.body(null, 204)
+    })
 }
 
 export function createLinkSharedTripRoutes(dependencies: ApiDependencies) {
-  const routes = new Hono<ApiEnvironment>()
-
-  routes.get("/:token", async (context) => {
-    const token = shareToken(context.req.param("token"))
-    const result = await dependencies.database.transaction(async (transaction) => {
-      const trip = await loadLinkSharedTrip(transaction, token, true)
-      const data = await linkSharedTripProjection(transaction, trip.id)
-      return { data, version: trip.version }
-    })
-    setTripEtag(context, result.version)
-    context.header("Cache-Control", "no-store")
-    return context.json({ data: result.data })
-  })
-
-  routes.post("/:token/copy", requireSession(dependencies), async (context) => {
-    const token = shareToken(context.req.param("token"))
-    const input = await parseJson(context, copyLinkSharedTripSchema)
-
-    const copiedTrip = await dependencies.database.transaction(async (transaction) => {
-      const source = await loadLinkSharedTrip(transaction, token, true)
-      return copyTripAggregate(transaction, source, context.var.session.user.id, input)
+  return new Hono<ApiEnvironment>()
+    .get("/:token", async (context) => {
+      const token = shareToken(context.req.param("token"))
+      const result = await dependencies.database.transaction(async (transaction) => {
+        const trip = await loadLinkSharedTrip(transaction, token, true)
+        const data = await linkSharedTripProjection(transaction, trip.id)
+        return { data, version: trip.version }
+      })
+      setTripEtag(context, result.version)
+      context.header("Cache-Control", "no-store")
+      return context.json({ data: result.data })
     })
 
-    setTripEtag(context, copiedTrip.version)
-    context.header("Location", `/api/v1/trips/${copiedTrip.id}`)
-    context.header("Cache-Control", "no-store")
-    return context.json({ data: { id: copiedTrip.id, version: copiedTrip.version } }, 201)
-  })
+    .post("/:token/copy", requireSession(dependencies), async (context) => {
+      const token = shareToken(context.req.param("token"))
+      const input = await parseJson(context, copyLinkSharedTripSchema)
 
-  return routes
+      const copiedTrip = await dependencies.database.transaction(async (transaction) => {
+        const source = await loadLinkSharedTrip(transaction, token, true)
+        return copyTripAggregate(transaction, source, context.var.session.user.id, input)
+      })
+
+      setTripEtag(context, copiedTrip.version)
+      context.header("Location", `/api/v1/trips/${copiedTrip.id}`)
+      context.header("Cache-Control", "no-store")
+      return context.json({ data: { id: copiedTrip.id, version: copiedTrip.version } }, 201)
+    })
 }

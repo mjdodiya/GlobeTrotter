@@ -101,152 +101,149 @@ function requireValidLeg(input: {
 }
 
 export function createLegRoutes(dependencies: ApiDependencies) {
-  const routes = new Hono<ApiEnvironment>()
-
-  routes.get("/:tripId/legs", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const access = await loadTripParticipantAccess(
-      dependencies.database,
-      tripId,
-      context.var.session.user.id,
-    )
-    const legs = await dependencies.database
-      .select()
-      .from(tripLegs)
-      .where(eq(tripLegs.tripId, tripId))
-      .orderBy(asc(tripLegs.departureAt), asc(tripLegs.id))
-    setTripEtag(context, access.trip.version)
-    return context.json({ data: legs.map(serializeLeg) })
-  })
-
-  routes.post("/:tripId/legs", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const expectedVersion = requireExpectedVersion(context)
-    const input = await parseJson(context, createLegSchema)
-    requireValidLeg(input)
-
-    const result = await executeTripMutation(
-      {
-        database: dependencies.database,
-        expectedVersion,
-        requirement: "editing",
+  return new Hono<ApiEnvironment>()
+    .get("/:tripId/legs", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const access = await loadTripParticipantAccess(
+        dependencies.database,
         tripId,
-        userId: context.var.session.user.id,
-      },
-      async ({ transaction }) => {
-        const from = await loadStopWithCity(transaction, tripId, input.fromStopId)
-        const to = await loadStopWithCity(transaction, tripId, input.toStopId)
-        const [leg] = await transaction
-          .insert(tripLegs)
-          .values({
-            tripId,
-            fromStopId: input.fromStopId,
-            toStopId: input.toStopId,
-            mode: input.mode,
-            title: input.title,
-            provider: input.provider ?? null,
-            reference: input.reference ?? null,
-            departureAt: new Date(input.departureAt),
-            arrivalAt: new Date(input.arrivalAt),
-            departureTimezone: from.timezone,
-            arrivalTimezone: to.timezone,
-            estimatedCost: input.estimatedCost,
-            notes: input.notes ?? null,
-          })
-          .returning()
-        if (!leg) throw new Error("Travel Leg insert did not return a row")
-        return leg
-      },
-    )
+        context.var.session.user.id,
+      )
+      const legs = await dependencies.database
+        .select()
+        .from(tripLegs)
+        .where(eq(tripLegs.tripId, tripId))
+        .orderBy(asc(tripLegs.departureAt), asc(tripLegs.id))
+      setTripEtag(context, access.trip.version)
+      return context.json({ data: legs.map(serializeLeg) })
+    })
 
-    setTripEtag(context, result.version)
-    return context.json({ data: { ...serializeLeg(result.data), version: result.version } }, 201)
-  })
+    .post("/:tripId/legs", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const expectedVersion = requireExpectedVersion(context)
+      const input = await parseJson(context, createLegSchema)
+      requireValidLeg(input)
 
-  routes.patch("/:tripId/legs/:legId", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const legId = parseValue(uuidSchema, context.req.param("legId"))
-    const expectedVersion = requireExpectedVersion(context)
-    const input = await parseJson(context, updateLegSchema)
-    requireNonEmptyPatch(input)
+      const result = await executeTripMutation(
+        {
+          database: dependencies.database,
+          expectedVersion,
+          requirement: "editing",
+          tripId,
+          userId: context.var.session.user.id,
+        },
+        async ({ transaction }) => {
+          const from = await loadStopWithCity(transaction, tripId, input.fromStopId)
+          const to = await loadStopWithCity(transaction, tripId, input.toStopId)
+          const [leg] = await transaction
+            .insert(tripLegs)
+            .values({
+              tripId,
+              fromStopId: input.fromStopId,
+              toStopId: input.toStopId,
+              mode: input.mode,
+              title: input.title,
+              provider: input.provider ?? null,
+              reference: input.reference ?? null,
+              departureAt: new Date(input.departureAt),
+              arrivalAt: new Date(input.arrivalAt),
+              departureTimezone: from.timezone,
+              arrivalTimezone: to.timezone,
+              estimatedCost: input.estimatedCost,
+              notes: input.notes ?? null,
+            })
+            .returning()
+          if (!leg) throw new Error("Travel Leg insert did not return a row")
+          return leg
+        },
+      )
 
-    const result = await executeTripMutation(
-      {
-        database: dependencies.database,
-        expectedVersion,
-        requirement: "editing",
-        tripId,
-        userId: context.var.session.user.id,
-      },
-      async ({ transaction }) => {
-        const existing = await loadLeg(transaction, tripId, legId)
-        const fromStopId = input.fromStopId ?? existing.fromStopId
-        const toStopId = input.toStopId ?? existing.toStopId
-        const departureAt = input.departureAt ?? existing.departureAt.toISOString()
-        const arrivalAt = input.arrivalAt ?? existing.arrivalAt.toISOString()
-        requireValidLeg({ fromStopId, toStopId, departureAt, arrivalAt })
-        const from = await loadStopWithCity(transaction, tripId, fromStopId)
-        const to = await loadStopWithCity(transaction, tripId, toStopId)
-        const [leg] = await transaction
-          .update(tripLegs)
-          .set({
-            ...(input.fromStopId !== undefined ? { fromStopId } : {}),
-            ...(input.toStopId !== undefined ? { toStopId } : {}),
-            ...(input.mode !== undefined ? { mode: input.mode } : {}),
-            ...(input.title !== undefined ? { title: input.title } : {}),
-            ...(input.provider !== undefined ? { provider: input.provider } : {}),
-            ...(input.reference !== undefined ? { reference: input.reference } : {}),
-            ...(input.departureAt !== undefined
-              ? { departureAt: new Date(input.departureAt) }
-              : {}),
-            ...(input.arrivalAt !== undefined ? { arrivalAt: new Date(input.arrivalAt) } : {}),
-            ...(input.estimatedCost !== undefined ? { estimatedCost: input.estimatedCost } : {}),
-            ...(input.estimatedCost !== undefined
-              ? {
-                  originalCost: null,
-                  originalCurrency: null,
-                  exchangeRate: null,
-                  exchangeRateProvider: null,
-                  exchangeRateAt: null,
-                }
-              : {}),
-            ...(input.notes !== undefined ? { notes: input.notes } : {}),
-            departureTimezone: from.timezone,
-            arrivalTimezone: to.timezone,
-            updatedAt: new Date(),
-          })
-          .where(and(eq(tripLegs.tripId, tripId), eq(tripLegs.id, legId)))
-          .returning()
-        if (!leg) throw new DomainError("TRAVEL_LEG_NOT_FOUND", "The Travel Leg was not found.")
-        return leg
-      },
-    )
-    setTripEtag(context, result.version)
-    return context.json({ data: { ...serializeLeg(result.data), version: result.version } })
-  })
+      setTripEtag(context, result.version)
+      return context.json({ data: { ...serializeLeg(result.data), version: result.version } }, 201)
+    })
 
-  routes.delete("/:tripId/legs/:legId", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const legId = parseValue(uuidSchema, context.req.param("legId"))
-    const expectedVersion = requireExpectedVersion(context)
-    const result = await executeTripMutation(
-      {
-        database: dependencies.database,
-        expectedVersion,
-        requirement: "editing",
-        tripId,
-        userId: context.var.session.user.id,
-      },
-      async ({ transaction }) => {
-        await loadLeg(transaction, tripId, legId)
-        await transaction
-          .delete(tripLegs)
-          .where(and(eq(tripLegs.tripId, tripId), eq(tripLegs.id, legId)))
-      },
-    )
-    setTripEtag(context, result.version)
-    return context.body(null, 204)
-  })
+    .patch("/:tripId/legs/:legId", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const legId = parseValue(uuidSchema, context.req.param("legId"))
+      const expectedVersion = requireExpectedVersion(context)
+      const input = await parseJson(context, updateLegSchema)
+      requireNonEmptyPatch(input)
 
-  return routes
+      const result = await executeTripMutation(
+        {
+          database: dependencies.database,
+          expectedVersion,
+          requirement: "editing",
+          tripId,
+          userId: context.var.session.user.id,
+        },
+        async ({ transaction }) => {
+          const existing = await loadLeg(transaction, tripId, legId)
+          const fromStopId = input.fromStopId ?? existing.fromStopId
+          const toStopId = input.toStopId ?? existing.toStopId
+          const departureAt = input.departureAt ?? existing.departureAt.toISOString()
+          const arrivalAt = input.arrivalAt ?? existing.arrivalAt.toISOString()
+          requireValidLeg({ fromStopId, toStopId, departureAt, arrivalAt })
+          const from = await loadStopWithCity(transaction, tripId, fromStopId)
+          const to = await loadStopWithCity(transaction, tripId, toStopId)
+          const [leg] = await transaction
+            .update(tripLegs)
+            .set({
+              ...(input.fromStopId !== undefined ? { fromStopId } : {}),
+              ...(input.toStopId !== undefined ? { toStopId } : {}),
+              ...(input.mode !== undefined ? { mode: input.mode } : {}),
+              ...(input.title !== undefined ? { title: input.title } : {}),
+              ...(input.provider !== undefined ? { provider: input.provider } : {}),
+              ...(input.reference !== undefined ? { reference: input.reference } : {}),
+              ...(input.departureAt !== undefined
+                ? { departureAt: new Date(input.departureAt) }
+                : {}),
+              ...(input.arrivalAt !== undefined ? { arrivalAt: new Date(input.arrivalAt) } : {}),
+              ...(input.estimatedCost !== undefined ? { estimatedCost: input.estimatedCost } : {}),
+              ...(input.estimatedCost !== undefined
+                ? {
+                    originalCost: null,
+                    originalCurrency: null,
+                    exchangeRate: null,
+                    exchangeRateProvider: null,
+                    exchangeRateAt: null,
+                  }
+                : {}),
+              ...(input.notes !== undefined ? { notes: input.notes } : {}),
+              departureTimezone: from.timezone,
+              arrivalTimezone: to.timezone,
+              updatedAt: new Date(),
+            })
+            .where(and(eq(tripLegs.tripId, tripId), eq(tripLegs.id, legId)))
+            .returning()
+          if (!leg) throw new DomainError("TRAVEL_LEG_NOT_FOUND", "The Travel Leg was not found.")
+          return leg
+        },
+      )
+      setTripEtag(context, result.version)
+      return context.json({ data: { ...serializeLeg(result.data), version: result.version } })
+    })
+
+    .delete("/:tripId/legs/:legId", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const legId = parseValue(uuidSchema, context.req.param("legId"))
+      const expectedVersion = requireExpectedVersion(context)
+      const result = await executeTripMutation(
+        {
+          database: dependencies.database,
+          expectedVersion,
+          requirement: "editing",
+          tripId,
+          userId: context.var.session.user.id,
+        },
+        async ({ transaction }) => {
+          await loadLeg(transaction, tripId, legId)
+          await transaction
+            .delete(tripLegs)
+            .where(and(eq(tripLegs.tripId, tripId), eq(tripLegs.id, legId)))
+        },
+      )
+      setTripEtag(context, result.version)
+      return context.body(null, 204)
+    })
 }
