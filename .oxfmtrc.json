@@ -14,6 +14,7 @@
     "sortScripts": false
   },
   "sortTailwindcss": {
+    "functions": ["cn"],
     "stylesheet": "./apps/web/src/index.css"
   }
 }

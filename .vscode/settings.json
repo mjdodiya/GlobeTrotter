@@ -39,6 +39,7 @@
     "apps/web/src/routeTree.gen.ts": true,
     "packages/db/drizzle/meta/**": true
   },
+  "tailwindCSS.classFunctions": ["cn", "clsx", "cva"],
   "typescript.native-preview.tsdk": "./node_modules/@typescript/native",
   "typescript.updateImportsOnFileMove.enabled": "always"
 }

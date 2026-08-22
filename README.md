@@ -5,7 +5,7 @@ Bare full-stack foundation for a personalized travel-planning application. This 
 ## Stack
 
 - Node.js 24, pnpm workspaces, and strict TypeScript
-- React, Vite, TanStack Router, TanStack Query, and Tailwind CSS
+- React, Vite, TanStack Router, TanStack Query, Tailwind CSS, and shadcn/ui
 - Hono with a typed client contract
 - Better Auth with email/password support
 - Drizzle ORM and PostgreSQL
@@ -64,6 +64,12 @@ pnpm db:logs
 pnpm db:generate
 pnpm db:migrate
 pnpm db:studio
+```
+
+Add shadcn/ui components to the web workspace from the repository root:
+
+```bash
+pnpm dlx shadcn@latest add button -c apps/web
 ```
 
 The only database tables currently defined are the tables required by Better Auth. Travel-planning tables and application routes must be designed before feature work begins.
