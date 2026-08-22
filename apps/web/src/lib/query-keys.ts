@@ -23,4 +23,7 @@ export const queryKeys = {
   trip: (tripId: string) => [...queryKeys.all, "trips", "detail", tripId] as const,
   tripItinerary: (tripId: string) => [...queryKeys.trip(tripId), "itinerary"] as const,
   tripBudget: (tripId: string) => [...queryKeys.trip(tripId), "budget"] as const,
+  tripMembers: (tripId: string) => [...queryKeys.trip(tripId), "members"] as const,
+  tripShareLinks: (tripId: string) => [...queryKeys.trip(tripId), "share-links"] as const,
+  linkSharedTrip: () => [...queryKeys.all, "link-shared-trip"] as const,
 }

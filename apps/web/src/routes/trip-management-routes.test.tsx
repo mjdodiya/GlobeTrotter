@@ -189,6 +189,9 @@ describe("Trip management routes", () => {
       "fetch",
       vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
         const request = new Request(input, init)
+        if (request.url.endsWith("/members") || request.url.endsWith("/share-links")) {
+          return Promise.resolve(jsonResponse({ data: [] }, { headers: { ETag: '"1"' } }))
+        }
         return Promise.resolve(
           jsonResponse(
             {
@@ -213,6 +216,16 @@ describe("Trip management routes", () => {
     let patchCount = 0
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const request = new Request(input, init)
+      if (request.method === "GET" && request.url.endsWith("/members")) {
+        return Promise.resolve(
+          jsonResponse({ data: [] }, { headers: { ETag: `"${Math.max(tripReadCount, 1)}"` } }),
+        )
+      }
+      if (request.method === "GET" && request.url.endsWith("/share-links")) {
+        return Promise.resolve(
+          jsonResponse({ data: [] }, { headers: { ETag: `"${Math.max(tripReadCount, 1)}"` } }),
+        )
+      }
       if (request.method === "PATCH") {
         patchCount += 1
         if (patchCount === 1) {

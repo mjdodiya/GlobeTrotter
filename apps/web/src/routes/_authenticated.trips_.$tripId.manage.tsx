@@ -7,6 +7,8 @@ import { ProblemState, problemFromError } from "@/components/foundation/problem-
 import { RouteLoadingState } from "@/components/foundation/route-states"
 import { StaleTripRecovery } from "@/components/foundation/stale-trip-recovery"
 import { useAppToast } from "@/components/foundation/toast"
+import { TripCollaboration } from "@/components/sharing/trip-collaboration"
+import { TripCopyControl } from "@/components/sharing/trip-copy-control"
 import { ItineraryWorkspace } from "@/components/trips/itinerary-workspace"
 import { TripForm, type TripFormValues } from "@/components/trips/trip-form"
 import { TripStatusBadge } from "@/components/trips/trip-summary-card"
@@ -163,6 +165,10 @@ function ManageTripPage() {
           </dl>
         </CardContent>
       </Card>
+
+      <TripCopyControl source={{ kind: "participant", tripId: trip.id }} />
+
+      <TripCollaboration session={session} trip={trip} />
 
       {actions.canEdit ? (
         <section

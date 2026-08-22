@@ -25,6 +25,7 @@ import { Route as PublicVerifyEmailRouteImport } from './routes/_public.verify-e
 import { Route as AuthenticatedTripsNewRouteImport } from './routes/_authenticated.trips_.new'
 import { Route as PublicActivitiesActivityIdRouteImport } from './routes/_public.activities_.$activityId'
 import { Route as PublicCitiesCityIdRouteImport } from './routes/_public.cities_.$cityId'
+import { Route as PublicShareTokenRouteImport } from './routes/_public.share.$token'
 import { Route as PublicTripsTripIdRouteImport } from './routes/_public.trips.$tripId'
 import { Route as AuthenticatedTripsTripIdManageRouteImport } from './routes/_authenticated.trips_.$tripId.manage'
 
@@ -107,6 +108,11 @@ const PublicCitiesCityIdRoute = PublicCitiesCityIdRouteImport.update({
   path: '/cities/$cityId',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicShareTokenRoute = PublicShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicTripsTripIdRoute = PublicTripsTripIdRouteImport.update({
   id: '/trips/$tripId',
   path: '/trips/$tripId',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/trips/new': typeof AuthenticatedTripsNewRoute
   '/activities/$activityId': typeof PublicActivitiesActivityIdRoute
   '/cities/$cityId': typeof PublicCitiesCityIdRoute
+  '/share/$token': typeof PublicShareTokenRoute
   '/trips/$tripId': typeof PublicTripsTripIdRoute
   '/trips/$tripId/manage': typeof AuthenticatedTripsTripIdManageRoute
 }
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/trips/new': typeof AuthenticatedTripsNewRoute
   '/activities/$activityId': typeof PublicActivitiesActivityIdRoute
   '/cities/$cityId': typeof PublicCitiesCityIdRoute
+  '/share/$token': typeof PublicShareTokenRoute
   '/trips/$tripId': typeof PublicTripsTripIdRoute
   '/trips/$tripId/manage': typeof AuthenticatedTripsTripIdManageRoute
 }
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_authenticated/trips_/new': typeof AuthenticatedTripsNewRoute
   '/_public/activities_/$activityId': typeof PublicActivitiesActivityIdRoute
   '/_public/cities_/$cityId': typeof PublicCitiesCityIdRoute
+  '/_public/share/$token': typeof PublicShareTokenRoute
   '/_public/trips/$tripId': typeof PublicTripsTripIdRoute
   '/_authenticated/trips_/$tripId/manage': typeof AuthenticatedTripsTripIdManageRoute
 }
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/trips/new'
     | '/activities/$activityId'
     | '/cities/$cityId'
+    | '/share/$token'
     | '/trips/$tripId'
     | '/trips/$tripId/manage'
   fileRoutesByTo: FileRoutesByTo
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/trips/new'
     | '/activities/$activityId'
     | '/cities/$cityId'
+    | '/share/$token'
     | '/trips/$tripId'
     | '/trips/$tripId/manage'
   id:
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/_authenticated/trips_/new'
     | '/_public/activities_/$activityId'
     | '/_public/cities_/$cityId'
+    | '/_public/share/$token'
     | '/_public/trips/$tripId'
     | '/_authenticated/trips_/$tripId/manage'
   fileRoutesById: FileRoutesById
@@ -354,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicCitiesCityIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/share/$token': {
+      id: '/_public/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof PublicShareTokenRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/trips/$tripId': {
       id: '/_public/trips/$tripId'
       path: '/trips/$tripId'
@@ -402,6 +421,7 @@ interface PublicRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicActivitiesActivityIdRoute: typeof PublicActivitiesActivityIdRoute
   PublicCitiesCityIdRoute: typeof PublicCitiesCityIdRoute
+  PublicShareTokenRoute: typeof PublicShareTokenRoute
   PublicTripsTripIdRoute: typeof PublicTripsTripIdRoute
 }
 
@@ -416,6 +436,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicActivitiesActivityIdRoute: PublicActivitiesActivityIdRoute,
   PublicCitiesCityIdRoute: PublicCitiesCityIdRoute,
+  PublicShareTokenRoute: PublicShareTokenRoute,
   PublicTripsTripIdRoute: PublicTripsTripIdRoute,
 }
 

@@ -146,6 +146,8 @@ export async function invalidateTripQueries(
     queryClient.invalidateQueries({ exact: true, queryKey: queryKeys.trip(tripId) }),
     queryClient.invalidateQueries({ exact: true, queryKey: queryKeys.tripItinerary(tripId) }),
     queryClient.invalidateQueries({ exact: true, queryKey: queryKeys.tripBudget(tripId) }),
+    queryClient.invalidateQueries({ exact: true, queryKey: queryKeys.tripMembers(tripId) }),
+    queryClient.invalidateQueries({ exact: true, queryKey: queryKeys.tripShareLinks(tripId) }),
   ])
 }
 
