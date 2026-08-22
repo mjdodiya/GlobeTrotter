@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "perf": "warn",
+    "suspicious": "error"
+  },
+  "plugins": ["typescript", "react", "unicorn", "import"],
+  "rules": {
+    "react/react-in-jsx-scope": "off"
+  },
+  "ignorePatterns": ["**/dist/**", "**/coverage/**", "**/node_modules/**"],
+  "overrides": [
+    {
+      "files": ["apps/web/src/**/*.{ts,tsx}"],
+      "env": {
+        "browser": true
+      }
+    }
+  ]
+}

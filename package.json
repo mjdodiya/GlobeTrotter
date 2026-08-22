@@ -1,0 +1,28 @@
+{
+  "name": "globetrotter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "dev": "pnpm --parallel --filter @globetrotter/api --filter @globetrotter/web dev",
+    "dev:api": "pnpm --filter @globetrotter/api dev",
+    "dev:web": "pnpm --filter @globetrotter/web dev",
+    "fmt": "oxfmt --write .",
+    "fmt:check": "oxfmt --check .",
+    "lint": "oxlint . --max-warnings 0",
+    "lint:fix": "oxlint . --fix --max-warnings 0",
+    "typecheck": "pnpm -r --if-present typecheck"
+  },
+  "devDependencies": {
+    "@typescript/native": "npm:typescript@7.0.2",
+    "oxfmt": "0.64.0",
+    "oxlint": "1.79.0",
+    "typescript": "npm:@typescript/typescript6@6.0.2"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11 <12"
+  },
+  "packageManager": "pnpm@11.22.0"
+}
