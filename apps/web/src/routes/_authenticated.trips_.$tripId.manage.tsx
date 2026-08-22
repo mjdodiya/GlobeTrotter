@@ -7,6 +7,7 @@ import { ProblemState, problemFromError } from "@/components/foundation/problem-
 import { RouteLoadingState } from "@/components/foundation/route-states"
 import { StaleTripRecovery } from "@/components/foundation/stale-trip-recovery"
 import { useAppToast } from "@/components/foundation/toast"
+import { ItineraryWorkspace } from "@/components/trips/itinerary-workspace"
 import { TripForm, type TripFormValues } from "@/components/trips/trip-form"
 import { TripStatusBadge } from "@/components/trips/trip-summary-card"
 import { Badge } from "@/components/ui/badge"
@@ -124,6 +125,8 @@ function ManageTripPage() {
           />
         ) : null}
       </header>
+
+      <ItineraryWorkspace trip={trip} />
 
       <Card>
         <CardContent>

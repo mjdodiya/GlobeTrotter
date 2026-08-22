@@ -185,7 +185,17 @@ export function useVersionedTripMutation<TInput, TOutput>(options: {
       const trip = queryClient.getQueryData<VersionedTrip>(queryKeys.trip(options.tripId))
       if (!trip) throw new MissingTripEtagError()
 
-      const response = await options.request(input, ifMatchHeaders(trip.etag))
+      // Any aggregate read may observe a newer Trip version than the detail query.
+      // Prefer that newer ETag, while the detail query remains the roll-forward
+      // target that makes consecutive mutations safe before refetch completes.
+      let current = trip
+      for (const [, candidate] of queryClient.getQueriesData<VersionedTrip>({
+        queryKey: queryKeys.trip(options.tripId),
+      })) {
+        if (candidate && candidate.data.version > current.data.version) current = candidate
+      }
+
+      const response = await options.request(input, ifMatchHeaders(current.etag))
       return requireVersionedMutationResponse<TOutput>(response)
     },
     onError: (error, input) => {

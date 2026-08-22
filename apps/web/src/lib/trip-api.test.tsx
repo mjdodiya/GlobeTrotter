@@ -62,6 +62,26 @@ describe("versioned Trip mutations", () => {
     expect(queryClient.getQueryData(queryKeys.trip(tripId))).toMatchObject({ etag: '"2"' })
   })
 
+  it("uses a newer ETag observed by another complete Trip aggregate read", async () => {
+    const queryClient = testQueryClient()
+    queryClient.setQueryData(queryKeys.trip(tripId), {
+      data: { id: tripId, name: "Cached Trip", version: 1 },
+      etag: captureTripEtag('"1"'),
+    })
+    queryClient.setQueryData(queryKeys.tripItinerary(tripId), {
+      data: { tripId, stops: [], legs: [], warnings: [], version: 2 },
+      etag: captureTripEtag('"2"'),
+    })
+    const request = vi.fn().mockResolvedValue(versionedResponse('"3"'))
+    const { result } = renderHook(() => useVersionedTripMutation({ tripId, request }), {
+      wrapper: wrapper(queryClient),
+    })
+
+    await act(() => result.current.mutation.mutateAsync({ name: "Fresh edit" }))
+
+    expect(request).toHaveBeenCalledWith({ name: "Fresh edit" }, { "If-Match": '"2"' })
+  })
+
   it("refreshes after a 412 and retries the retained input with the latest ETag", async () => {
     const queryClient = testQueryClient()
     queryClient.setQueryData(queryKeys.trip(tripId), {

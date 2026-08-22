@@ -68,6 +68,16 @@ function tripDetail(level: "editor" | "owner" | "viewer", version = 1) {
   }
 }
 
+function itineraryDetail(version = 1) {
+  return {
+    tripId,
+    version,
+    stops: [],
+    legs: [],
+    warnings: [],
+  }
+}
+
 function testQueryClient() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -177,11 +187,17 @@ describe("Trip management routes", () => {
   it("gates owner-only controls from a viewer", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          jsonResponse({ data: tripDetail("viewer") }, { headers: { ETag: '"1"' } }),
-        ),
+      vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init)
+        return Promise.resolve(
+          jsonResponse(
+            {
+              data: request.url.endsWith("/itinerary") ? itineraryDetail() : tripDetail("viewer"),
+            },
+            { headers: { ETag: '"1"' } },
+          ),
+        )
+      }),
     )
     await renderRoute(`/trips/${tripId}/manage`)
 
@@ -193,31 +209,43 @@ describe("Trip management routes", () => {
   })
 
   it("sends If-Match and recovers an owner edit from a stale version", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({ data: tripDetail("owner") }, { headers: { ETag: '"1"' } }),
+    let tripReadCount = 0
+    let patchCount = 0
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      if (request.method === "PATCH") {
+        patchCount += 1
+        if (patchCount === 1) {
+          return Promise.resolve(
+            jsonResponse(
+              {
+                type: "STALE_TRIP_VERSION",
+                title: "Trip version is stale",
+                status: 412,
+                detail: "Refresh the Trip before retrying.",
+              },
+              { status: 412 },
+            ),
+          )
+        }
+        return Promise.resolve(
+          jsonResponse({ data: tripDetail("owner", 3) }, { headers: { ETag: '"3"' } }),
+        )
+      }
+      if (request.url.endsWith("/itinerary")) {
+        return Promise.resolve(
+          jsonResponse(
+            { data: itineraryDetail(tripReadCount > 1 ? 3 : 1) },
+            { headers: { ETag: tripReadCount > 1 ? '"3"' : '"1"' } },
+          ),
+        )
+      }
+      tripReadCount += 1
+      const version = tripReadCount === 1 ? 1 : tripReadCount === 2 ? 2 : 3
+      return Promise.resolve(
+        jsonResponse({ data: tripDetail("owner", version) }, { headers: { ETag: `"${version}"` } }),
       )
-      .mockResolvedValueOnce(
-        jsonResponse(
-          {
-            type: "STALE_TRIP_VERSION",
-            title: "Trip version is stale",
-            status: 412,
-            detail: "Refresh the Trip before retrying.",
-          },
-          { status: 412 },
-        ),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({ data: tripDetail("owner", 2) }, { headers: { ETag: '"2"' } }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({ data: tripDetail("owner", 3) }, { headers: { ETag: '"3"' } }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({ data: tripDetail("owner", 3) }, { headers: { ETag: '"3"' } }),
-      )
+    })
     vi.stubGlobal("fetch", fetchMock)
     await renderRoute(`/trips/${tripId}/manage`)
 
@@ -234,7 +262,10 @@ describe("Trip management routes", () => {
       await screen.findByRole("alertdialog", { name: "Review the latest Trip before retrying" }),
     ).toBeVisible()
 
-    const staleRequest = new Request(fetchMock.mock.calls[1]![0], fetchMock.mock.calls[1]![1])
+    const stalePatchCall = fetchMock.mock.calls.find(
+      ([input, init]) => new Request(input, init).method === "PATCH",
+    )
+    const staleRequest = new Request(stalePatchCall![0], stalePatchCall![1])
     expect(staleRequest.method).toBe("PATCH")
     expect(staleRequest.headers.get("If-Match")).toBe('"1"')
 
@@ -242,8 +273,11 @@ describe("Trip management routes", () => {
     expect(await screen.findByRole("heading", { name: "Review the refreshed Trip" })).toBeVisible()
     await userEvent.click(screen.getByRole("button", { name: "Retry my changes" }))
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5))
-    const retryRequest = new Request(fetchMock.mock.calls[3]![0], fetchMock.mock.calls[3]![1])
+    await waitFor(() => expect(patchCount).toBe(2))
+    const latestPatchRequests = fetchMock.mock.calls.filter(
+      ([input, init]) => new Request(input, init).method === "PATCH",
+    )
+    const retryRequest = new Request(latestPatchRequests[1]![0], latestPatchRequests[1]![1])
     expect(retryRequest.headers.get("If-Match")).toBe('"2"')
     expect(await screen.findByText("Trip updated")).toBeVisible()
   })
