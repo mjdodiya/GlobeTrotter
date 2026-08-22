@@ -134,88 +134,89 @@ function serializeChange(change: RateChange) {
 }
 
 export function createRateRoutes(dependencies: ApiDependencies) {
-  const routes = new Hono<ApiEnvironment>()
+  return new Hono<ApiEnvironment>()
+    .post("/:tripId/rates/preview", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const access = await loadTripParticipantAccess(
+        dependencies.database,
+        tripId,
+        context.var.session.user.id,
+      )
+      requireTripEditingAccess(access)
 
-  routes.post("/:tripId/rates/preview", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const access = await loadTripParticipantAccess(
-      dependencies.database,
-      tripId,
-      context.var.session.user.id,
-    )
-    requireTripEditingAccess(access)
-
-    // Preview is deliberately read-only: a user must explicitly commit the same
-    // Trip version before historical planning costs are replaced.
-    const changes = await calculateRateChanges(dependencies, tripId, access.trip.baseCurrency)
-    setTripEtag(context, access.trip.version)
-    return context.json({
-      data: { baseCurrency: access.trip.baseCurrency, changes: changes.map(serializeChange) },
-    })
-  })
-
-  routes.post("/:tripId/rates/refresh", async (context) => {
-    const tripId = parseValue(uuidSchema, context.req.param("tripId"))
-    const expectedVersion = requireExpectedVersion(context)
-    const access = await loadTripParticipantAccess(
-      dependencies.database,
-      tripId,
-      context.var.session.user.id,
-    )
-    requireTripEditingAccess(access)
-    requireCurrentVersion(access, expectedVersion)
-
-    // Network I/O happens before opening the database transaction. The mutation
-    // rechecks the version under a row lock, so a concurrent edit makes this stale.
-    const changes = await calculateRateChanges(dependencies, tripId, access.trip.baseCurrency)
-    if (changes.length === 0) {
+      // Preview is deliberately read-only: a user must explicitly commit the same
+      // Trip version before historical planning costs are replaced.
+      const changes = await calculateRateChanges(dependencies, tripId, access.trip.baseCurrency)
       setTripEtag(context, access.trip.version)
       return context.json({
-        data: { baseCurrency: access.trip.baseCurrency, changes: [], version: access.trip.version },
+        data: { baseCurrency: access.trip.baseCurrency, changes: changes.map(serializeChange) },
       })
-    }
-
-    const result = await executeTripMutation(
-      {
-        database: dependencies.database,
-        expectedVersion,
-        requirement: "editing",
-        tripId,
-        userId: context.var.session.user.id,
-      },
-      async ({ transaction }) => {
-        for (const change of changes) {
-          const values = {
-            estimatedCost: change.refreshedEstimatedCost,
-            exchangeRate: change.exchangeRate,
-            exchangeRateAt: new Date(change.exchangeRateAt),
-            exchangeRateProvider: change.exchangeRateProvider,
-            updatedAt: new Date(),
-          }
-          if (change.type === "itineraryItem") {
-            // The transaction owns one pg client; writes must remain sequential.
-            // oxlint-disable-next-line no-await-in-loop
-            await transaction
-              .update(itineraryItems)
-              .set(values)
-              .where(eq(itineraryItems.id, change.id))
-          } else {
-            // oxlint-disable-next-line no-await-in-loop
-            await transaction.update(tripLegs).set(values).where(eq(tripLegs.id, change.id))
-          }
-        }
-      },
-    )
-
-    setTripEtag(context, result.version)
-    return context.json({
-      data: {
-        baseCurrency: access.trip.baseCurrency,
-        changes: changes.map(serializeChange),
-        version: result.version,
-      },
     })
-  })
 
-  return routes
+    .post("/:tripId/rates/refresh", async (context) => {
+      const tripId = parseValue(uuidSchema, context.req.param("tripId"))
+      const expectedVersion = requireExpectedVersion(context)
+      const access = await loadTripParticipantAccess(
+        dependencies.database,
+        tripId,
+        context.var.session.user.id,
+      )
+      requireTripEditingAccess(access)
+      requireCurrentVersion(access, expectedVersion)
+
+      // Network I/O happens before opening the database transaction. The mutation
+      // rechecks the version under a row lock, so a concurrent edit makes this stale.
+      const changes = await calculateRateChanges(dependencies, tripId, access.trip.baseCurrency)
+      if (changes.length === 0) {
+        setTripEtag(context, access.trip.version)
+        return context.json({
+          data: {
+            baseCurrency: access.trip.baseCurrency,
+            changes: [],
+            version: access.trip.version,
+          },
+        })
+      }
+
+      const result = await executeTripMutation(
+        {
+          database: dependencies.database,
+          expectedVersion,
+          requirement: "editing",
+          tripId,
+          userId: context.var.session.user.id,
+        },
+        async ({ transaction }) => {
+          for (const change of changes) {
+            const values = {
+              estimatedCost: change.refreshedEstimatedCost,
+              exchangeRate: change.exchangeRate,
+              exchangeRateAt: new Date(change.exchangeRateAt),
+              exchangeRateProvider: change.exchangeRateProvider,
+              updatedAt: new Date(),
+            }
+            if (change.type === "itineraryItem") {
+              // The transaction owns one pg client; writes must remain sequential.
+              // oxlint-disable-next-line no-await-in-loop
+              await transaction
+                .update(itineraryItems)
+                .set(values)
+                .where(eq(itineraryItems.id, change.id))
+            } else {
+              // oxlint-disable-next-line no-await-in-loop
+              await transaction.update(tripLegs).set(values).where(eq(tripLegs.id, change.id))
+            }
+          }
+        },
+      )
+
+      setTripEtag(context, result.version)
+      return context.json({
+        data: {
+          baseCurrency: access.trip.baseCurrency,
+          changes: changes.map(serializeChange),
+          version: result.version,
+        },
+      })
+    })
 }
