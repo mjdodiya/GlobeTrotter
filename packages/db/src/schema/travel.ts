@@ -5,6 +5,7 @@ import {
   char,
   check,
   date,
+  foreignKey,
   index,
   integer,
   numeric,
@@ -30,6 +31,15 @@ const updatedAt = timestamp("updated_at", { mode: "date", withTimezone: true })
 
 export const tripVisibility = pgEnum("trip_visibility", ["private", "public"])
 export const tripMemberRole = pgEnum("trip_member_role", ["viewer", "editor"])
+export const tripLegMode = pgEnum("trip_leg_mode", [
+  "flight",
+  "train",
+  "bus",
+  "car",
+  "ferry",
+  "walk",
+  "other",
+])
 export const itineraryItemKind = pgEnum("itinerary_item_kind", [
   "activity",
   "transport",
@@ -61,7 +71,10 @@ export const cities = pgTable(
     imageUrl: text("image_url"),
     createdAt,
   },
-  (table) => [index("cities_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops"))],
+  (table) => [
+    index("cities_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
+    uniqueIndex("cities_country_name_uidx").on(table.countryCode, table.name),
+  ],
 )
 
 export const activityCategories = pgTable("activity_categories", {
@@ -95,6 +108,7 @@ export const activities = pgTable(
       table.estimatedCost,
     ),
     index("activities_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
+    uniqueIndex("activities_city_name_uidx").on(table.cityId, table.name),
   ],
 )
 
@@ -173,7 +187,67 @@ export const tripStops = pgTable(
     check("trip_stops_date_range_check", sql`${table.endDate} > ${table.startDate}`),
     check("trip_stops_position_check", sql`${table.position} >= 0`),
     uniqueIndex("trip_stops_trip_position_idx").on(table.tripId, table.position),
+    uniqueIndex("trip_stops_trip_id_id_uidx").on(table.tripId, table.id),
     index("trip_stops_city_idx").on(table.cityId),
+  ],
+)
+
+export const tripLegs = pgTable(
+  "trip_legs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tripId: uuid("trip_id")
+      .notNull()
+      .references(() => trips.id, { onDelete: "cascade" }),
+    fromStopId: uuid("from_stop_id").notNull(),
+    toStopId: uuid("to_stop_id").notNull(),
+    mode: tripLegMode("mode").notNull(),
+    title: text("title").notNull(),
+    provider: text("provider"),
+    reference: text("reference"),
+    departureAt: timestamp("departure_at", { mode: "date", withTimezone: true }).notNull(),
+    arrivalAt: timestamp("arrival_at", { mode: "date", withTimezone: true }).notNull(),
+    departureTimezone: text("departure_timezone").notNull(),
+    arrivalTimezone: text("arrival_timezone").notNull(),
+    estimatedCost: numeric("estimated_cost", { precision: 18, scale: 4 }).notNull(),
+    originalCost: numeric("original_cost", { precision: 18, scale: 4 }),
+    originalCurrency: char("original_currency", { length: 3 }),
+    exchangeRate: numeric("exchange_rate", { precision: 24, scale: 12 }),
+    exchangeRateProvider: text("exchange_rate_provider"),
+    exchangeRateAt: timestamp("exchange_rate_at", { mode: "date", withTimezone: true }),
+    notes: text("notes"),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tripId, table.fromStopId],
+      foreignColumns: [tripStops.tripId, tripStops.id],
+      name: "trip_legs_from_stop_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.tripId, table.toStopId],
+      foreignColumns: [tripStops.tripId, tripStops.id],
+      name: "trip_legs_to_stop_fk",
+    }).onDelete("cascade"),
+    check("trip_legs_distinct_stops_check", sql`${table.fromStopId} <> ${table.toStopId}`),
+    check("trip_legs_time_range_check", sql`${table.arrivalAt} > ${table.departureAt}`),
+    check("trip_legs_estimated_cost_check", sql`${table.estimatedCost} >= 0`),
+    check(
+      "trip_legs_conversion_snapshot_check",
+      sql`(
+        ${table.originalCost} is null and ${table.originalCurrency} is null and
+        ${table.exchangeRate} is null and ${table.exchangeRateProvider} is null and
+        ${table.exchangeRateAt} is null
+      ) or (
+        ${table.originalCost} is not null and ${table.originalCost} >= 0 and
+        ${table.originalCurrency} is not null and ${table.exchangeRate} is not null and
+        ${table.exchangeRate} > 0 and ${table.exchangeRateProvider} is not null and
+        ${table.exchangeRateAt} is not null
+      )`,
+    ),
+    index("trip_legs_trip_departure_idx").on(table.tripId, table.departureAt),
+    uniqueIndex("trip_legs_trip_stops_uidx").on(table.tripId, table.fromStopId, table.toStopId),
   ],
 )
 
@@ -193,8 +267,15 @@ export const itineraryItems = pgTable(
     description: text("description"),
     scheduledDate: date("scheduled_date", { mode: "string" }).notNull(),
     startTime: time("start_time", { precision: 0 }),
+    endDate: date("end_date", { mode: "string" }),
+    endTime: time("end_time", { precision: 0 }),
     durationMinutes: integer("duration_minutes"),
     estimatedCost: numeric("estimated_cost", { precision: 18, scale: 4 }).notNull(),
+    originalCost: numeric("original_cost", { precision: 18, scale: 4 }),
+    originalCurrency: char("original_currency", { length: 3 }),
+    exchangeRate: numeric("exchange_rate", { precision: 24, scale: 12 }),
+    exchangeRateProvider: text("exchange_rate_provider"),
+    exchangeRateAt: timestamp("exchange_rate_at", { mode: "date", withTimezone: true }),
     position: integer("position").notNull(),
     notes: text("notes"),
     createdAt,
@@ -206,6 +287,28 @@ export const itineraryItems = pgTable(
     check(
       "itinerary_items_duration_minutes_check",
       sql`${table.durationMinutes} is null or ${table.durationMinutes} > 0`,
+    ),
+    check(
+      "itinerary_items_end_date_check",
+      sql`${table.endDate} is null or ${table.endDate} >= ${table.scheduledDate}`,
+    ),
+    check(
+      "itinerary_items_stay_span_check",
+      sql`(${table.kind} = 'stay' and ${table.endDate} is not null) or
+          (${table.kind} <> 'stay' and ${table.endDate} is null and ${table.endTime} is null)`,
+    ),
+    check(
+      "itinerary_items_conversion_snapshot_check",
+      sql`(
+        ${table.originalCost} is null and ${table.originalCurrency} is null and
+        ${table.exchangeRate} is null and ${table.exchangeRateProvider} is null and
+        ${table.exchangeRateAt} is null
+      ) or (
+        ${table.originalCost} is not null and ${table.originalCost} >= 0 and
+        ${table.originalCurrency} is not null and ${table.exchangeRate} is not null and
+        ${table.exchangeRate} > 0 and ${table.exchangeRateProvider} is not null and
+        ${table.exchangeRateAt} is not null
+      )`,
     ),
     check(
       "itinerary_items_source_activity_kind_check",
@@ -253,11 +356,22 @@ export const savedCities = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.cityId] })],
 )
 
-export const userTravelRelations = relations(user, ({ many }) => ({
+export const userTravelPreferences = pgTable("user_travel_preferences", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  locale: text("locale").default("en").notNull(),
+  defaultCurrency: char("default_currency", { length: 3 }).default("USD").notNull(),
+  createdAt,
+  updatedAt,
+})
+
+export const userTravelRelations = relations(user, ({ many, one }) => ({
   ownedTrips: many(trips, { relationName: "tripOwner" }),
   tripMemberships: many(tripMembers),
   createdShareLinks: many(tripShareLinks, { relationName: "shareLinkCreator" }),
   savedCities: many(savedCities),
+  preferences: one(userTravelPreferences),
 }))
 
 export const countryRelations = relations(countries, ({ many }) => ({
@@ -301,6 +415,7 @@ export const tripRelations = relations(trips, ({ many, one }) => ({
   copies: many(trips, { relationName: "tripCopies" }),
   members: many(tripMembers),
   stops: many(tripStops),
+  legs: many(tripLegs),
   shareLinks: many(tripShareLinks),
 }))
 
@@ -313,6 +428,22 @@ export const tripStopRelations = relations(tripStops, ({ many, one }) => ({
   trip: one(trips, { fields: [tripStops.tripId], references: [trips.id] }),
   city: one(cities, { fields: [tripStops.cityId], references: [cities.id] }),
   itineraryItems: many(itineraryItems),
+  outgoingLegs: many(tripLegs, { relationName: "travelLegOrigin" }),
+  incomingLegs: many(tripLegs, { relationName: "travelLegDestination" }),
+}))
+
+export const tripLegRelations = relations(tripLegs, ({ one }) => ({
+  trip: one(trips, { fields: [tripLegs.tripId], references: [trips.id] }),
+  fromStop: one(tripStops, {
+    relationName: "travelLegOrigin",
+    fields: [tripLegs.fromStopId],
+    references: [tripStops.id],
+  }),
+  toStop: one(tripStops, {
+    relationName: "travelLegDestination",
+    fields: [tripLegs.toStopId],
+    references: [tripStops.id],
+  }),
 }))
 
 export const itineraryItemRelations = relations(itineraryItems, ({ one }) => ({
@@ -338,4 +469,8 @@ export const tripShareLinkRelations = relations(tripShareLinks, ({ one }) => ({
 export const savedCityRelations = relations(savedCities, ({ one }) => ({
   user: one(user, { fields: [savedCities.userId], references: [user.id] }),
   city: one(cities, { fields: [savedCities.cityId], references: [cities.id] }),
+}))
+
+export const userTravelPreferenceRelations = relations(userTravelPreferences, ({ one }) => ({
+  user: one(user, { fields: [userTravelPreferences.userId], references: [user.id] }),
 }))
