@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "activities_city_name_uidx" ON "activities" USING btree ("city_id","name");--> statement-breakpoint
+CREATE UNIQUE INDEX "cities_country_name_uidx" ON "cities" USING btree ("country_code","name");

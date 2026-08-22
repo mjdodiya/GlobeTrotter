@@ -1,1 +1,6 @@
 export * from "./errors/domain-error.ts"
+export * from "./travel/budget.ts"
+export * from "./travel/date-rules.ts"
+export * from "./travel/money.ts"
+export * from "./travel/schedule.ts"
+export * from "./travel/trip-planning.ts"

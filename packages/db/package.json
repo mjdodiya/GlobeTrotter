@@ -19,6 +19,7 @@
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:seed": "node --conditions=development --env-file=../../.env src/seeds/catalog.ts",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts",
     "typecheck": "tsc -p tsconfig.json"
   },

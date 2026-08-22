@@ -17,9 +17,11 @@
   "dependencies": {
     "@globetrotter/db": "workspace:*",
     "better-auth": "1.7.1",
-    "drizzle-orm": "0.45.2"
+    "drizzle-orm": "0.45.2",
+    "nodemailer": "9.0.5"
   },
   "devDependencies": {
-    "@types/node": "24.13.3"
+    "@types/node": "24.13.3",
+    "@types/nodemailer": "8.0.1"
   }
 }

@@ -22,6 +22,27 @@
       "when": 1787376729639,
       "tag": "0002_seed_activity_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787385471548,
+      "tag": "0003_regular_riptide",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787386756118,
+      "tag": "0004_rare_eddie_brock",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787387681384,
+      "tag": "0005_smart_human_fly",
+      "breakpoints": true
     }
   ]
 }
