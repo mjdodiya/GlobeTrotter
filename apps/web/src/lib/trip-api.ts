@@ -13,9 +13,12 @@ import { queryKeys } from "./query-keys"
 import { ifMatchHeaders, MissingTripEtagError, type TripEtag } from "./trip-etag"
 
 type GetTrip = (typeof apiClient.api.v1.trips)[":tripId"]["$get"]
+type GetItinerary = (typeof apiClient.api.v1.trips)[":tripId"]["itinerary"]["$get"]
 
 type TripResponse = InferResponseType<GetTrip, 200>
+type ItineraryResponse = InferResponseType<GetItinerary, 200>
 export type Trip = TripResponse["data"]
+export type TripItinerary = ItineraryResponse["data"]
 export type VersionedTrip = { data: Trip; etag: TripEtag }
 export type VersionedTripRequest<TInput> = (
   input: TInput,
@@ -34,10 +37,22 @@ async function getTrip(tripId: string): Promise<VersionedTrip> {
   return requireVersionedResponseData<Trip>(response)
 }
 
+async function getTripItinerary(tripId: string): Promise<{ data: TripItinerary; etag: TripEtag }> {
+  const response = await apiClient.api.v1.trips[":tripId"].itinerary.$get({ param: { tripId } })
+  return requireVersionedResponseData<TripItinerary>(response)
+}
+
 export function tripQueryOptions(tripId: string) {
   return queryOptions({
     queryKey: queryKeys.trip(tripId),
     queryFn: () => getTrip(tripId),
+  })
+}
+
+export function tripItineraryQueryOptions(tripId: string) {
+  return queryOptions({
+    queryKey: queryKeys.tripItinerary(tripId),
+    queryFn: () => getTripItinerary(tripId),
   })
 }
 
