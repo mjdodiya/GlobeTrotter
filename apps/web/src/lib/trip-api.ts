@@ -95,8 +95,11 @@ export function useVersionedTripMutation<TInput, TOutput>(options: {
       const problem = recoveryProblem(error)
       if (problem) setFailedMutation({ input, problem })
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       setFailedMutation(undefined)
+      queryClient.setQueryData<VersionedTrip>(queryKeys.trip(options.tripId), (trip) =>
+        trip ? { ...trip, etag: result.etag } : trip,
+      )
       await invalidateTripQueries(queryClient, options.tripId)
     },
   })
