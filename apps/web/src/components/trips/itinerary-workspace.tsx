@@ -38,6 +38,7 @@ import {
 import { useVersionedTripMutation, type Trip } from "@/lib/trip-api"
 
 import { ItemEditorDialog, StopEditorDialog } from "./itinerary-forms"
+import { TravelLegWorkspace } from "./travel-leg-workspace"
 
 function formatLocalDate(date: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -519,6 +520,7 @@ export function ItineraryWorkspace({ trip }: { trip: Trip }) {
       {itineraryQuery.data ? (
         <>
           <CompletenessWarnings itinerary={itineraryQuery.data.data} />
+          <TravelLegWorkspace itinerary={itineraryQuery.data.data} trip={trip} />
           {itineraryQuery.data.data.stops.length === 0 ? (
             <Card className="border-dashed py-10 text-center">
               <CardContent>

@@ -162,6 +162,7 @@ describe("Itinerary workspace", () => {
     expect(screen.getByRole("heading", { name: "Kyoto, JP" })).toBeVisible()
     expect(screen.getByText("Temple visit")).toBeVisible()
     expect(screen.getByText("Riverside Hotel")).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Travel Legs" })).toBeVisible()
     expect(screen.queryByRole("button", { name: "Add Stop" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Edit Stop" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /Move Temple visit/ })).not.toBeInTheDocument()
