@@ -18,18 +18,25 @@ it("requires the latest Trip to load before the user can retry a stale change", 
   }
 
   render(
-    <StaleTripRecovery
-      open
-      problem={problem}
-      onCancel={() => undefined}
-      onRefresh={refresh}
-      onRetry={retry}
-    />,
+    <>
+      <button>Inspect latest Trip</button>
+      <StaleTripRecovery
+        open
+        problem={problem}
+        onCancel={() => undefined}
+        onRefresh={refresh}
+        onRetry={retry}
+      />
+    </>,
   )
 
-  expect(screen.getByRole("button", { name: "Retry my changes" })).toBeDisabled()
+  expect(screen.queryByRole("button", { name: "Retry my changes" })).not.toBeInTheDocument()
   await userEvent.click(screen.getByRole("button", { name: "Review latest Trip" }))
   expect(refresh).toHaveBeenCalledOnce()
+  expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  expect(screen.getByRole("region", { name: "Review the refreshed Trip" })).toBeVisible()
+  await userEvent.click(screen.getByRole("button", { name: "Inspect latest Trip" }))
+  expect(screen.getByRole("button", { name: "Inspect latest Trip" })).toHaveFocus()
   expect(screen.getByRole("button", { name: "Retry my changes" })).toBeEnabled()
   await userEvent.click(screen.getByRole("button", { name: "Retry my changes" }))
   expect(retry).toHaveBeenCalledOnce()

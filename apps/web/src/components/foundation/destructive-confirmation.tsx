@@ -3,6 +3,8 @@ import type { ReactElement } from "react"
 
 import { Button } from "@/components/ui/button"
 
+import { centeredModalClassName, modalOverlayClassName } from "./modal-styles"
+
 export function DestructiveConfirmation({
   confirmLabel,
   description,
@@ -20,8 +22,8 @@ export function DestructiveConfirmation({
     <AlertDialog.Root>
       <AlertDialog.Trigger asChild>{trigger}</AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/45 motion-safe:animate-in motion-safe:fade-in" />
-        <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl border bg-background p-5 shadow-xl motion-safe:animate-in motion-safe:zoom-in-95 sm:p-6">
+        <AlertDialog.Overlay className={modalOverlayClassName} />
+        <AlertDialog.Content className={`${centeredModalClassName} max-w-md`}>
           <div className="space-y-2">
             <AlertDialog.Title className="text-lg font-semibold">{title}</AlertDialog.Title>
             <AlertDialog.Description className="text-sm text-muted-foreground">

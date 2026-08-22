@@ -1,8 +1,10 @@
 import { AlertDialog } from "radix-ui"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import type { ProblemDetails } from "@/lib/problem-details"
+
+import { centeredModalClassName, modalOverlayClassName } from "./modal-styles"
 
 export function StaleTripRecovery({
   onCancel,
@@ -17,36 +19,76 @@ export function StaleTripRecovery({
   open: boolean
   problem: ProblemDetails
 }) {
-  const [refreshedProblem, setRefreshedProblem] = useState<string>()
+  const [reviewingProblem, setReviewingProblem] = useState<string>()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshError, setRefreshError] = useState<string>()
   const problemIdentity = `${problem.type}:${problem.requestId ?? problem.detail}`
-  const hasLatestTrip = open && refreshedProblem === problemIdentity
+  const isReviewing = open && reviewingProblem === problemIdentity
+  const focusReviewPanel = useCallback((node: HTMLHeadingElement | null) => node?.focus(), [])
 
   async function refresh() {
     setIsRefreshing(true)
+    setRefreshError(undefined)
     try {
       await onRefresh()
-      setRefreshedProblem(problemIdentity)
+      setReviewingProblem(problemIdentity)
+    } catch {
+      setRefreshError("The latest Trip could not be loaded. Check your connection and try again.")
     } finally {
       setIsRefreshing(false)
     }
   }
 
   function cancel() {
-    setRefreshedProblem(undefined)
+    setReviewingProblem(undefined)
+    setRefreshError(undefined)
     onCancel()
   }
 
   function retry() {
-    setRefreshedProblem(undefined)
+    setReviewingProblem(undefined)
+    setRefreshError(undefined)
     onRetry()
+  }
+
+  if (isReviewing) {
+    return (
+      <section
+        aria-labelledby="stale-trip-review-title"
+        className="fixed right-4 bottom-4 z-40 grid w-[calc(100%-2rem)] max-w-md gap-4 rounded-2xl border bg-background p-5 shadow-xl"
+        role="region"
+      >
+        <div className="space-y-2">
+          <h2
+            id="stale-trip-review-title"
+            ref={focusReviewPanel}
+            tabIndex={-1}
+            className="font-semibold"
+          >
+            Review the refreshed Trip
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            The page now shows the latest Trip. Compare it with your intended change, then retry
+            only if your change is still safe.
+          </p>
+        </div>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={cancel}>
+            Discard my changes
+          </Button>
+          <Button type="button" onClick={retry}>
+            Retry my changes
+          </Button>
+        </div>
+      </section>
+    )
   }
 
   return (
     <AlertDialog.Root open={open} onOpenChange={(nextOpen) => !nextOpen && cancel()}>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/45 motion-safe:animate-in motion-safe:fade-in" />
-        <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl border bg-background p-5 shadow-xl motion-safe:animate-in motion-safe:zoom-in-95 sm:p-6">
+        <AlertDialog.Overlay className={modalOverlayClassName} />
+        <AlertDialog.Content className={`${centeredModalClassName} max-w-lg`}>
           <div className="space-y-2">
             <AlertDialog.Title className="text-lg font-semibold">
               Review the latest Trip before retrying
@@ -57,9 +99,9 @@ export function StaleTripRecovery({
             </AlertDialog.Description>
           </div>
 
-          {hasLatestTrip ? (
-            <p role="status" className="text-sm font-medium text-emerald-700">
-              Latest Trip loaded. Review the page before retrying your changes.
+          {refreshError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {refreshError}
             </p>
           ) : null}
 
@@ -71,9 +113,6 @@ export function StaleTripRecovery({
             </AlertDialog.Cancel>
             <Button type="button" variant="secondary" disabled={isRefreshing} onClick={refresh}>
               {isRefreshing ? "Loading latest Trip…" : "Review latest Trip"}
-            </Button>
-            <Button type="button" disabled={!hasLatestTrip || isRefreshing} onClick={retry}>
-              Retry my changes
             </Button>
           </div>
         </AlertDialog.Content>

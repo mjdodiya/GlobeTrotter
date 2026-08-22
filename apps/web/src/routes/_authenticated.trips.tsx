@@ -18,7 +18,7 @@ function TripsFoundationPage() {
       </header>
       <EmptyState
         title="Start with a new Trip"
-        description="Trip creation arrives in the next journey-specific slice."
+        description="Trip creation is coming in a dedicated workflow."
         action={<Button disabled>Create Trip</Button>}
       />
     </div>

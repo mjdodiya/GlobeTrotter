@@ -12,8 +12,7 @@ function AccountFoundationPage() {
         Account settings
       </h1>
       <p className="break-words text-muted-foreground">
-        Signed in as {session.user.email}. Account workflows are implemented in their dedicated
-        journey.
+        Signed in as {session.user.email}. Account management is available in a dedicated workflow.
       </p>
     </div>
   )

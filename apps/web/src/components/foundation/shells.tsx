@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router"
 import {
   Compass,
   LayoutDashboard,
+  LogIn,
   LogOut,
   Map,
   Menu,
@@ -17,10 +18,12 @@ import { Button } from "@/components/ui/button"
 import type { AppSession } from "@/lib/session"
 import { cn } from "@/lib/utils"
 
+import { modalOverlayClassName } from "./modal-styles"
+
 type NavigationItem = {
   icon: LucideIcon
   label: string
-  to: "/" | "/dashboard" | "/trips"
+  to: "/" | "/dashboard" | "/sign-in" | "/trips"
   hash?: string
 }
 
@@ -46,7 +49,9 @@ function Brand() {
 }
 
 function MobileNavigation({ authenticated }: { authenticated: boolean }) {
-  const navigation = authenticated ? authenticatedNavigation : publicNavigation
+  const navigation = authenticated
+    ? authenticatedNavigation
+    : [...publicNavigation, { icon: LogIn, label: "Sign in", to: "/sign-in" as const }]
 
   return (
     <Dialog.Root>
@@ -57,7 +62,7 @@ function MobileNavigation({ authenticated }: { authenticated: boolean }) {
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/45 motion-safe:animate-in motion-safe:fade-in" />
+        <Dialog.Overlay className={modalOverlayClassName} />
         <Dialog.Content className="fixed inset-y-0 right-0 z-50 flex w-[min(20rem,calc(100%-2rem))] flex-col gap-6 border-l bg-background p-5 shadow-xl motion-safe:animate-in motion-safe:slide-in-from-right">
           <div className="flex items-center justify-between gap-3">
             <Dialog.Title className="font-semibold">Navigation</Dialog.Title>
