@@ -9,8 +9,9 @@
     "db:generate": "pnpm --filter @globetrotter/db db:generate",
     "db:logs": "docker compose logs -f postgres",
     "db:migrate": "pnpm --filter @globetrotter/db db:migrate",
+    "db:seed": "pnpm --filter @globetrotter/db db:seed",
     "db:studio": "pnpm --filter @globetrotter/db db:studio",
-    "db:up": "docker compose up -d postgres",
+    "db:up": "docker compose up -d postgres mailpit",
     "dev": "pnpm --filter @globetrotter/domain --filter @globetrotter/db --filter @globetrotter/auth build && pnpm --parallel --filter @globetrotter/api --filter @globetrotter/web --filter @globetrotter/admin dev",
     "dev:admin": "pnpm --filter @globetrotter/admin dev",
     "dev:api": "pnpm --filter @globetrotter/api dev",
@@ -19,6 +20,7 @@
     "fmt:check": "oxfmt --check .",
     "lint": "oxlint . --max-warnings 0",
     "lint:fix": "oxlint . --fix --max-warnings 0",
+    "test:api": "pnpm --filter @globetrotter/api test:integration",
     "typecheck": "pnpm -r --if-present typecheck"
   },
   "devDependencies": {

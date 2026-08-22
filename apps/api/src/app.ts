@@ -1,3 +1,4 @@
+import { DomainError } from "@globetrotter/domain"
 import { Hono } from "hono"
 import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
@@ -9,6 +10,7 @@ import { errorBody, handleApiError } from "./errors.ts"
 import { requestLogging } from "./middleware/request-logging.ts"
 import { requireTrustedOrigin } from "./middleware/security.ts"
 import { createHealthRoutes } from "./routes/health.ts"
+import { createV1Routes } from "./routes/v1.ts"
 
 export function createApp(dependencies: ApiDependencies) {
   const app = new Hono<ApiEnvironment>()
@@ -18,9 +20,10 @@ export function createApp(dependencies: ApiDependencies) {
   app.use(
     "/api/*",
     cors({
-      allowHeaders: ["Content-Type"],
+      allowHeaders: ["Authorization", "Content-Type", "If-Match", "X-Request-Id"],
       allowMethods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
+      exposeHeaders: ["ETag", "Location", "X-Request-Id"],
       origin: [...dependencies.trustedOrigins],
     }),
   )
@@ -29,7 +32,14 @@ export function createApp(dependencies: ApiDependencies) {
     bodyLimit({
       maxSize: 1024 * 1024,
       onError: (context) =>
-        context.json(errorBody("INVALID_INPUT", "Request body is too large"), 413),
+        context.json(
+          errorBody("INVALID_INPUT", "Request body is too large", {
+            requestId: context.var.requestId,
+            status: 413,
+            title: "Request body is too large",
+          }),
+          413,
+        ),
     }),
   )
   app.use("/api/*", requestLogging(dependencies.logger))
@@ -37,11 +47,25 @@ export function createApp(dependencies: ApiDependencies) {
 
   app.all("/api/auth/*", (context) => dependencies.auth.handler(context.req.raw))
 
-  const routes = app.route("/api", createHealthRoutes(dependencies.database))
+  const routes = app
+    .route("/api", createHealthRoutes(dependencies.database))
+    .route("/api/v1", createV1Routes(dependencies))
 
-  routes.notFound((context) => context.json(errorBody("NOT_FOUND", "Route not found"), 404))
+  routes.notFound((context) =>
+    context.json(
+      errorBody("NOT_FOUND", "Route not found", { requestId: context.var.requestId }),
+      404,
+    ),
+  )
   routes.onError((error, context) => {
-    dependencies.logger.error({ err: error, requestId: context.var.requestId }, "request failed")
+    if (error instanceof DomainError) {
+      dependencies.logger.warn(
+        { errorCode: error.code, requestId: context.var.requestId },
+        "request rejected",
+      )
+    } else {
+      dependencies.logger.error({ err: error, requestId: context.var.requestId }, "request failed")
+    }
     return handleApiError(error, context)
   })
 
