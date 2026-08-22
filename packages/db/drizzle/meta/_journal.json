@@ -8,6 +8,20 @@
       "when": 1787373515165,
       "tag": "0000_gray_secret_warriors",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787376658725,
+      "tag": "0001_square_albert_cleary",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787376729639,
+      "tag": "0002_seed_activity_categories",
+      "breakpoints": true
     }
   ]
 }
