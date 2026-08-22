@@ -26,6 +26,7 @@ export function createAuth(configuration: AuthConfiguration) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
+      revokeSessionsOnPasswordReset: true,
       sendResetPassword: ({ user, url }) =>
         configuration.email.send({
           to: user.email,

@@ -17,8 +17,26 @@ export const sessionQueryOptions = () =>
     staleTime: 60_000,
   })
 
-export async function clearSession(queryClient: QueryClient): Promise<void> {
-  await authClient.signOut()
+export async function establishSession(queryClient: QueryClient): Promise<AppSession> {
+  queryClient.removeQueries({ queryKey: queryKeys.all })
+  const session = await queryClient.fetchQuery({ ...sessionQueryOptions(), staleTime: 0 })
+  if (!session) throw new Error("Your session could not be started. Please try again.")
+  return session
+}
+
+export async function refreshSession(queryClient: QueryClient): Promise<AppSession | null> {
+  return queryClient.fetchQuery({ ...sessionQueryOptions(), staleTime: 0 })
+}
+
+export function expireSession(queryClient: QueryClient): void {
+  queryClient.removeQueries({ queryKey: queryKeys.all })
   queryClient.setQueryData(queryKeys.session(), null)
-  await queryClient.invalidateQueries({ queryKey: queryKeys.all })
+}
+
+export async function clearSession(queryClient: QueryClient): Promise<void> {
+  const result = await authClient.signOut()
+  if (result.error && result.error.status !== 401) {
+    throw new Error(result.error.message ?? "We couldn’t sign you out. Try again.")
+  }
+  expireSession(queryClient)
 }

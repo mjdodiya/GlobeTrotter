@@ -13,6 +13,7 @@ import {
 import { Dialog, DropdownMenu } from "radix-ui"
 import type { ReactNode } from "react"
 
+import { VerificationBanner } from "@/components/auth/verification-banner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import type { AppSession } from "@/lib/session"
@@ -96,7 +97,15 @@ function MobileNavigation({ authenticated }: { authenticated: boolean }) {
   )
 }
 
-export function PublicShell({ children }: { children: ReactNode }) {
+export function PublicShell({
+  children,
+  onSignOut,
+  session,
+}: {
+  children: ReactNode
+  onSignOut?: () => Promise<void>
+  session?: AppSession | null
+}) {
   return (
     <div className="flex min-h-dvh min-w-0 flex-col overflow-x-clip bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
@@ -112,10 +121,14 @@ export function PublicShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <Button asChild className="hidden sm:inline-flex">
-              <Link to="/sign-in">Sign in</Link>
-            </Button>
-            <MobileNavigation authenticated={false} />
+            {session && onSignOut ? (
+              <AccountMenu user={session.user} onSignOut={onSignOut} />
+            ) : (
+              <Button asChild className="hidden sm:inline-flex">
+                <Link to="/sign-in">Sign in</Link>
+              </Button>
+            )}
+            <MobileNavigation authenticated={Boolean(session)} />
           </div>
         </div>
       </header>
@@ -241,6 +254,7 @@ export function AuthenticatedShell({
 }) {
   return (
     <AuthenticatedFrame account={<AccountMenu user={session.user} onSignOut={onSignOut} />}>
+      {session.user.emailVerified ? null : <VerificationBanner email={session.user.email} />}
       {children}
     </AuthenticatedFrame>
   )

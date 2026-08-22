@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-ro
 
 import { RouteErrorState, RouteLoadingState } from "@/components/foundation/route-states"
 import { AuthenticatedShell, AuthenticatedShellPlaceholder } from "@/components/foundation/shells"
+import { useAppToast } from "@/components/foundation/toast"
 import { clearSession, sessionQueryOptions } from "@/lib/session"
 
 export const Route = createFileRoute("/_authenticated")({
@@ -29,10 +30,19 @@ function AuthenticatedLayout() {
   const { queryClient } = Route.useRouteContext()
   const { session } = Route.useRouteContext()
   const router = useRouter()
+  const toast = useAppToast()
 
   async function signOut() {
-    await clearSession(queryClient)
-    await router.navigate({ to: "/" })
+    try {
+      await clearSession(queryClient)
+      await router.navigate({ to: "/" })
+    } catch (error) {
+      toast.show({
+        title: "Sign-out failed",
+        description: error instanceof Error ? error.message : "Try again.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

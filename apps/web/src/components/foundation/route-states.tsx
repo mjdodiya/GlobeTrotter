@@ -1,8 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 import { Inbox, LoaderCircle, MapPinOff } from "lucide-react"
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import { expireSession } from "@/lib/session"
 
 import { ProblemState, problemFromError } from "./problem-state"
 
@@ -62,5 +64,12 @@ export function NotFoundState() {
 }
 
 export function RouteErrorState({ error, reset }: ErrorComponentProps) {
-  return <ProblemState problem={problemFromError(error)} onRetry={reset} />
+  const queryClient = useQueryClient()
+  const problem = problemFromError(error)
+
+  useEffect(() => {
+    if (problem.kind === "authentication") expireSession(queryClient)
+  }, [problem.kind, queryClient])
+
+  return <ProblemState problem={problem} onRetry={reset} />
 }
