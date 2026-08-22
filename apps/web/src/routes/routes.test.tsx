@@ -61,6 +61,15 @@ describe("application routes", () => {
     )
   })
 
+  it("confirms completed permanent account deletion separately from sign-out", async () => {
+    await renderRoute("/?accountDeleted=true", null)
+
+    expect(screen.getByText("Account permanently deleted")).toBeVisible()
+    expect(
+      screen.getByText("Your deletion is complete and you have been signed out of GlobeTrotter."),
+    ).toBeVisible()
+  })
+
   it("keeps the public shell around a not-found route", async () => {
     await renderRoute("/missing-page", null)
 

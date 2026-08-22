@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { ArrowLeft } from "lucide-react"
 
@@ -6,15 +6,18 @@ import { ProblemState, problemFromError } from "@/components/foundation/problem-
 import { useAppToast } from "@/components/foundation/toast"
 import { TripForm, type TripFormValues } from "@/components/trips/trip-form"
 import { Button } from "@/components/ui/button"
+import { accountProfileQueryOptions } from "@/lib/account-api"
 import { queryKeys } from "@/lib/query-keys"
 import { createTrip } from "@/lib/trip-api"
 
 export const Route = createFileRoute("/_authenticated/trips_/new")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(accountProfileQueryOptions()),
   component: NewTripPage,
 })
 
 function NewTripPage() {
   const { session } = Route.useRouteContext()
+  const profile = useSuspenseQuery(accountProfileQueryOptions()).data
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const toast = useAppToast()
@@ -63,7 +66,7 @@ function NewTripPage() {
             startDate: "",
             endDate: "",
             budgetLimit: null,
-            baseCurrency: "USD",
+            baseCurrency: profile.defaultCurrency,
             visibility: "private",
           }}
           isPending={mutation.isPending}

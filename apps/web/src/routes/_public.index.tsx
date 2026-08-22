@@ -1,9 +1,17 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowRight, CalendarDays, MapPinned, Search, WalletCards } from "lucide-react"
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  MapPinned,
+  Search,
+  WalletCards,
+} from "lucide-react"
 
 import { PublicTripCard } from "@/components/discovery/cards"
 import { InitialResultsState, ResultsFooter, ResultsGrid } from "@/components/discovery/results"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { publicTripsQueryOptions } from "@/lib/discovery-api"
 import { uniqueById } from "@/lib/discovery-search"
@@ -27,15 +35,31 @@ const features = [
 ] as const
 
 export const Route = createFileRoute("/_public/")({
+  validateSearch: (search: Record<string, unknown>) =>
+    search.accountDeleted === true || search.accountDeleted === "true"
+      ? { accountDeleted: true }
+      : {},
   component: LandingPage,
 })
 
 function LandingPage() {
+  const search = Route.useSearch()
   const tripsQuery = useInfiniteQuery(publicTripsQueryOptions())
   const trips = uniqueById(tripsQuery.data?.pages ?? [])
 
   return (
     <>
+      {search.accountDeleted ? (
+        <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+          <Alert>
+            <CheckCircle2 aria-hidden="true" />
+            <AlertTitle>Account permanently deleted</AlertTitle>
+            <AlertDescription>
+              Your deletion is complete and you have been signed out of GlobeTrotter.
+            </AlertDescription>
+          </Alert>
+        </div>
+      ) : null}
       <section className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:px-8 lg:py-32">
         <div className="min-w-0 space-y-6">
           <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
