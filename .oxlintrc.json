@@ -7,9 +7,21 @@
   },
   "plugins": ["typescript", "react", "unicorn", "import"],
   "rules": {
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css"]
+      }
+    ],
     "react/react-in-jsx-scope": "off"
   },
-  "ignorePatterns": ["**/dist/**", "**/coverage/**", "**/node_modules/**"],
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/coverage/**",
+    "**/node_modules/**",
+    "apps/web/src/routeTree.gen.ts",
+    "packages/db/drizzle/**"
+  ],
   "overrides": [
     {
       "files": ["apps/web/src/**/*.{ts,tsx}"],
