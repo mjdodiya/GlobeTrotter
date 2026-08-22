@@ -1,27 +1,27 @@
-import { type FormEvent, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { type FormEvent, useState } from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { authClient } from '@/lib/auth-client';
 
 export function SignInForm() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
+    setError('');
 
     if (!email.trim() || !password) {
-      setError("Enter your email and password to continue.");
+      setError('Enter your email and password to continue.');
       return;
     }
 
@@ -33,18 +33,20 @@ export function SignInForm() {
         rememberMe,
       });
       if (result.error) {
-        setError(result.error.message || "Those credentials could not be verified.");
+        setError(
+          result.error.message || 'Those credentials could not be verified.',
+        );
         setIsSubmitting(false);
         return;
       }
     } catch {
-      setError("We could not reach the sign-in service. Try again.");
+      setError('We could not reach the sign-in service. Try again.');
       setIsSubmitting(false);
       return;
     }
     setIsSubmitting(false);
 
-    await navigate({ to: "/" });
+    await navigate({ to: '/' });
   }
 
   return (
@@ -69,8 +71,7 @@ export function SignInForm() {
                 viewBox="0 0 24 24"
                 className="size-8"
                 fill="currentColor"
-                aria-hidden="true"
-              >
+                aria-hidden="true">
                 <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z" />
               </svg>
             </AvatarFallback>
@@ -79,15 +80,13 @@ export function SignInForm() {
           {/* Plus button */}
           <span
             className="absolute bottom-0 right-0 flex size-7 translate-x-1/4 translate-y-1/4 items-center justify-center rounded-full bg-[#0D7A8A] text-white shadow-sm"
-            aria-hidden="true"
-          >
+            aria-hidden="true">
             <svg
               viewBox="0 0 24 24"
               className="size-4"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
-            >
+              strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
             </svg>
           </span>
@@ -99,13 +98,15 @@ export function SignInForm() {
       </div>
 
       {/* Form */}
-      <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+      <form
+        className="space-y-5"
+        onSubmit={handleSubmit}
+        noValidate>
         {/* Email */}
         <div className="space-y-2">
           <Label
             htmlFor="email"
-            className="text-[11px] font-semibold uppercase tracking-[0.02em] text-[#344D68]"
-          >
+            className="text-[11px] font-semibold uppercase tracking-[0.02em] text-[#344D68]">
             Email
           </Label>
 
@@ -125,8 +126,7 @@ export function SignInForm() {
         <div className="space-y-2">
           <Label
             htmlFor="password"
-            className="text-[11px] font-semibold uppercase tracking-[0.02em] text-[#344D68]"
-          >
+            className="text-[11px] font-semibold uppercase tracking-[0.02em] text-[#344D68]">
             Password
           </Label>
 
@@ -155,8 +155,7 @@ export function SignInForm() {
 
             <Label
               htmlFor="remember-me"
-              className="cursor-pointer text-xs font-normal text-[#344D68]"
-            >
+              className="cursor-pointer text-xs font-normal text-[#344D68]">
               Remember me
             </Label>
           </div>
@@ -165,14 +164,15 @@ export function SignInForm() {
             type="button"
             disabled
             className="cursor-not-allowed text-xs font-semibold text-[#9AA9BA]"
-            title="Password recovery is not configured yet"
-          >
+            title="Password recovery is not configured yet">
             Forgot password?
           </button>
         </div>
 
         {error ? (
-          <p role="alert" className="text-sm text-red-700">
+          <p
+            role="alert"
+            className="text-sm text-red-700">
             {error}
           </p>
         ) : null}
@@ -181,18 +181,16 @@ export function SignInForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-lg bg-[#0F2744] text-sm font-semibold text-white shadow-none transition-colors hover:bg-[#183A61]"
-        >
-          {isSubmitting ? "Signing in..." : "Sign In"}
+          className="h-11 w-full rounded-lg bg-[#0F2744] text-sm font-semibold text-white shadow-none transition-colors hover:bg-[#183A61]">
+          {isSubmitting ? 'Signing in...' : 'Sign In'}
         </Button>
 
         {/* Signup */}
         <p className="text-center text-[12px] text-[#526984]">
-          New here?{" "}
+          New here?{' '}
           <Link
             to="/signup"
-            className="font-semibold text-[#0D7A8A] transition-colors hover:text-[#0F2744]"
-          >
+            className="font-semibold text-[#0D7A8A] transition-colors hover:text-[#0F2744]">
             Create an account
           </Link>
         </p>
