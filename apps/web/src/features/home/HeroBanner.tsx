@@ -29,12 +29,12 @@ export function HeroBanner() {
   )
 }
 
-export function HeroSearch() {
+export function HeroSearch({ placeholder = "Search destinations, activities, hotels..." }: { placeholder?: string }) {
   return (
     <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-5 sm:px-8 lg:flex-row lg:items-center lg:px-10">
       <div className="relative min-w-0 flex-1">
         <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#7890a3]" aria-hidden="true" />
-        <Input placeholder="Search destinations, activities, hotels..." aria-label="Search destinations, activities, hotels" className="h-11 rounded-lg border-[#d7e0e5] bg-white pl-11 text-xs shadow-[0_2px_8px_rgba(16,43,73,.04)] placeholder:text-[#91a2b1]" />
+        <Input placeholder={placeholder} aria-label={placeholder} className="h-11 rounded-lg border-[#d7e0e5] bg-white pl-11 text-xs shadow-[0_2px_8px_rgba(16,43,73,.04)] placeholder:text-[#91a2b1]" />
       </div>
       <div className="grid grid-cols-3 gap-2 lg:flex">
         {['Group by', 'Filter', 'Sort by'].map((label) => (

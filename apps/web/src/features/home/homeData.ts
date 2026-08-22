@@ -25,7 +25,6 @@ export const navigationItems: NavigationItem[] = [
   { label: "My Trips", href: "/trips" },
   { label: "Community", href: "/community" },
   { label: "Calendar", href: "/calendar" },
-  { label: "Admin", href: "/admin" },
 ]
 
 export const destinations: Destination[] = [

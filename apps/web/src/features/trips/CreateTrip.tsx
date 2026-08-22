@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 
 import { Button } from "@/components/ui/button"
 import { HeroSearch } from "@/features/home/HeroBanner"
@@ -25,7 +25,7 @@ export function CreateTrip() {
         <div className="mt-7"><TripSuggestions /></div>
         <div className="mt-7 flex flex-col-reverse justify-end gap-3 sm:flex-row">
           <Button type="button" variant="outline" onClick={() => navigate({ to: "/" })} className="h-11 rounded-lg border-[#d9e1ea] bg-white px-7 text-xs font-semibold text-[#526984] hover:bg-[#f2f5f6]">Cancel</Button>
-          <Button type="button" onClick={() => navigate({ to: "/trips/new/build" })} className="h-11 rounded-lg bg-[#0f2744] px-7 text-xs font-semibold text-white hover:bg-[#183a61]">Build Itinerary <span aria-hidden="true">→</span></Button>
+          <Button asChild type="button" className="h-11 rounded-lg bg-[#0f2744] px-7 text-xs font-semibold text-white hover:bg-[#183a61]"><Link to="/trips/new/build">Build Itinerary <span aria-hidden="true">→</span></Link></Button>
         </div>
       </div>
     </main>
