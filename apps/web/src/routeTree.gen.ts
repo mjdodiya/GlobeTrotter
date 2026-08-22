@@ -10,8 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TripsRouteImport } from './routes/trips'
 import { Route as TripsNewRouteImport } from './routes/trips.new'
 import { Route as TripsNewBuildRouteImport } from './routes/trips.new.build'
 
@@ -20,9 +25,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -30,10 +55,15 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TripsNewRoute = TripsNewRouteImport.update({
-  id: '/trips/new',
-  path: '/trips/new',
+const TripsRoute = TripsRouteImport.update({
+  id: '/trips',
+  path: '/trips',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TripsNewRoute = TripsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => TripsRoute,
 } as any)
 const TripsNewBuildRoute = TripsNewBuildRouteImport.update({
   id: '/build',
@@ -43,40 +73,89 @@ const TripsNewBuildRoute = TripsNewBuildRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/calendar': typeof CalendarRoute
+  '/community': typeof CommunityRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/signup': typeof SignupRoute
+  '/trips': typeof TripsRouteWithChildren
   '/trips/new': typeof TripsNewRouteWithChildren
   '/trips/new/build': typeof TripsNewBuildRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/calendar': typeof CalendarRoute
+  '/community': typeof CommunityRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/signup': typeof SignupRoute
+  '/trips': typeof TripsRouteWithChildren
   '/trips/new': typeof TripsNewRouteWithChildren
   '/trips/new/build': typeof TripsNewBuildRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/calendar': typeof CalendarRoute
+  '/community': typeof CommunityRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/signup': typeof SignupRoute
+  '/trips': typeof TripsRouteWithChildren
   '/trips/new': typeof TripsNewRouteWithChildren
   '/trips/new/build': typeof TripsNewBuildRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/trips/new' | '/trips/new/build'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/calendar'
+    | '/community'
+    | '/login'
+    | '/profile'
+    | '/signup'
+    | '/trips'
+    | '/trips/new'
+    | '/trips/new/build'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/trips/new' | '/trips/new/build'
+  to:
+    | '/'
+    | '/admin'
+    | '/calendar'
+    | '/community'
+    | '/login'
+    | '/profile'
+    | '/signup'
+    | '/trips'
+    | '/trips/new'
+    | '/trips/new/build'
   id:
-    '__root__' | '/' | '/login' | '/signup' | '/trips/new' | '/trips/new/build'
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/calendar'
+    | '/community'
+    | '/login'
+    | '/profile'
+    | '/signup'
+    | '/trips'
+    | '/trips/new'
+    | '/trips/new/build'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  CalendarRoute: typeof CalendarRoute
+  CommunityRoute: typeof CommunityRoute
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
   SignupRoute: typeof SignupRoute
-  TripsNewRoute: typeof TripsNewRouteWithChildren
+  TripsRoute: typeof TripsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -88,11 +167,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -102,12 +209,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trips': {
+      id: '/trips'
+      path: '/trips'
+      fullPath: '/trips'
+      preLoaderRoute: typeof TripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trips/new': {
       id: '/trips/new'
-      path: '/trips/new'
+      path: '/new'
       fullPath: '/trips/new'
       preLoaderRoute: typeof TripsNewRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof TripsRoute
     }
     '/trips/new/build': {
       id: '/trips/new/build'
@@ -131,11 +245,25 @@ const TripsNewRouteWithChildren = TripsNewRoute._addFileChildren(
   TripsNewRouteChildren,
 )
 
+interface TripsRouteChildren {
+  TripsNewRoute: typeof TripsNewRouteWithChildren
+}
+
+const TripsRouteChildren: TripsRouteChildren = {
+  TripsNewRoute: TripsNewRouteWithChildren,
+}
+
+const TripsRouteWithChildren = TripsRoute._addFileChildren(TripsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  CalendarRoute: CalendarRoute,
+  CommunityRoute: CommunityRoute,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
   SignupRoute: SignupRoute,
-  TripsNewRoute: TripsNewRouteWithChildren,
+  TripsRoute: TripsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
